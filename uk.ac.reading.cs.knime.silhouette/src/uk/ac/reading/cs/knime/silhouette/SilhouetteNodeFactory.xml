@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<knimeNode icon="./silhouette.png" type="Visualizer" xmlns="http://knime.org/node/v2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v2.10 http://knime.org/node/v2.10.xsd">
+    <name>Silhouette</name>
+    
+    <shortDescription>
+        Silhouette is a method of validation of consistency within clusters of data, assigning a number between -1 and 1 to each data point. This will show whether the data points are more similar to their own clusters or to the others, which indicates if there may be too few or too many clusters.
+    </shortDescription>
+    
+    <fullDescription>
+        <intro> Silhouette is a method of validation of consistency within clusters of data, assigning a number between -1 and 1 to each data point. This will show whether the data points are more similar to their own clusters or to the others, which indicates if there may be too few or too many clusters.</intro>
+        
+        <tab name="Options">
+            <option name="Index of Cluster Column">Index of the column that contains the cluster data</option>
+        </tab>
+    </fullDescription>
+    
+    <ports>
+        <inPort index="0" name="Clustered Data">Data labelled with cluster names in any column</inPort>
+        <outPort index="0" name="Labeled Data">Original data with the Silhouette Coefficients of each data point</outPort>
+    </ports>    
+    
+    <views>
+        <view index="0" name="Chart">Displays all Silhouette Coefficients in a bar chart</view>
+    </views>
+</knimeNode>

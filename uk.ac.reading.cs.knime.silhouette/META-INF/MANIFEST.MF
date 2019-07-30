@@ -1,0 +1,19 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Silhouette-Node extension for KNIME Workbench
+Bundle-SymbolicName: uk.ac.reading.cs.knime.silhouette; singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-ClassPath: silhouette.jar
+Bundle-Activator: uk.ac.reading.cs.knime.silhouette.SilhouetteNodePlugin
+Bundle-Vendor: University of Reading
+Require-Bundle: org.eclipse.core.runtime,
+ org.knime.workbench.core,
+ org.knime.workbench.repository,
+ org.knime.base,
+ org.knime.core,
+ org.knime.ext.jfreechart,
+ org.junit,
+ org.apache.commons.lang3;bundle-version="3.3.1"
+Bundle-ActivationPolicy: lazy
+Export-Package: uk.ac.reading.cs.knime.silhouette
+
