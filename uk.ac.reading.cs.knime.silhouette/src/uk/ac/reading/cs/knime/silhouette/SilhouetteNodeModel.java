@@ -2,13 +2,14 @@ package uk.ac.reading.cs.knime.silhouette;
 
 import java.awt.Color;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.Random;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
-
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomainCreator;
 import org.knime.core.data.DataColumnSpec;
@@ -27,9 +28,11 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
+import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
  * <code>NodeModel</code> for the "Silhouette" node.
@@ -64,28 +67,49 @@ public class SilhouetteNodeModel extends NodeModel {
 			Color.decode("#72E87C"),
 			Color.decode("#FFEC8A")};
 
+	/** All available String distance calc methods */
+	public static final String[] STRING_CALC_METHODS = new String[] {
+			"Levenshtein",
+			"Hamming",
+			"Trigram",
+			"Jaro-Winkler"
+	};
+
+	/** Internal model save file name */
+	private static final String SETTINGS_FILE_NAME = "silhouetteInternals";
+
 	// ************ fields for the settings ***************
 	/** The config key for the column containing cluster data */ 
 	public static final String CFGKEY_CLUSTER_COLUMN = "clusterColumnIndex"; 
 
+	/** The config key for string distance calculation method */ 
+	public static final String CFGKEY_STRING_DISTANCE_METHOD = "stringDistanceMethod"; 
+
 	/** The default cluster column is going to be the last one */ 
 	public static final int DEFAULT_CLUSTER_COLUMN = -1;
 
-	// the settings model for the column containing cluster data
-	private static final SettingsModelIntegerBounded m_clusterColumn =
-			new SettingsModelIntegerBounded(
-					SilhouetteNodeModel.CFGKEY_CLUSTER_COLUMN,
-					SilhouetteNodeModel.DEFAULT_CLUSTER_COLUMN,
-					Integer.MIN_VALUE, Integer.MAX_VALUE);
+	/** The default string distance calculation method */ 
+	public static final String DEFAULT_STRING_CALC_METHOD = STRING_CALC_METHODS[0];
 
-	// internal model containing info about clusters
+	/** the settings model for the column containing cluster data */ 
+	public static final SettingsModelInteger m_clusterColumn =
+			new SettingsModelInteger(
+					SilhouetteNodeModel.CFGKEY_CLUSTER_COLUMN,
+					SilhouetteNodeModel.DEFAULT_CLUSTER_COLUMN);
+
+	/** the settings model for string distance calculation method */ 
+	public static final SettingsModelString m_stringDistCalc =
+			new SettingsModelString(
+					SilhouetteNodeModel.CFGKEY_STRING_DISTANCE_METHOD,
+					SilhouetteNodeModel.DEFAULT_STRING_CALC_METHOD);
+
+	/** internal model containing info about clusters */ 
 	private static SilhouetteModel m_silhouetteModel;
 
-	//TODO integrate all these into SilhouetteModel
 	private static InternalColumn[] m_internalColumns;
 	private static int m_totalRowNumber;
-
 	private static int m_adjustedClusterColumn;
+
 
 	/**
 	 * Constructor for the node model.
@@ -125,17 +149,15 @@ public class SilhouetteNodeModel extends NodeModel {
 					m_internalColumns[currentColumn].addCell(((StringCell) currCell).getStringValue());
 					break;
 				}
-				
+
 				currentColumn ++;
 				currentColumn = currentColumn%m_internalColumns.length;
-
 			}
 
 			currentRow++;
 		}
 
 		m_totalRowNumber = currentRow;
-
 
 		//extract names and bounderies, generate colors
 		ArrayList<InternalCluster> tempClusterData = new ArrayList<>();
@@ -154,8 +176,7 @@ public class SilhouetteNodeModel extends NodeModel {
 				lastClusterRowIndices = new ArrayList<>();
 				clusterNum++;
 				lastClusterColor = COLOR_LIST[clusterNum%20];
-				
-				
+
 			}
 
 			lastClusterRowIndices.add(i);
@@ -167,26 +188,10 @@ public class SilhouetteNodeModel extends NodeModel {
 			}
 		}
 
-
 		// put all extracted cluster data into an internal container model
 		m_silhouetteModel = new SilhouetteModel(tempClusterData.toArray(new InternalCluster[tempClusterData.size()]));
 
-
-
 		// calculate the Silhouette Coefficients
-
-
-		// this is just random for testing purposes
-		//for(int i = 0; i < m_silhouetteModel.getClusterData().length; i++) {
-		//	  for(int i2 = 0; i2 <m_silhouetteModel.getClusterData()[i].getCoefficients().length; i2++) {
-		//		   m_silhouetteModel.getClusterData()[i].getCoefficients()[i2] = new Random().nextDouble()-0.1;
-		//	  }
-		//	  m_silhouetteModel.getClusterData()[i].sort();
-		//}
-
-
-
-		// this is the actual Silhouette calculation
 
 		//TODO modularise this please, it's way too long. Thanks, me
 
@@ -196,10 +201,17 @@ public class SilhouetteNodeModel extends NodeModel {
 		for(int i = 0; i < m_silhouetteModel.getClusterData().length; i++) {
 			for(int i2 = 0; i2 <m_silhouetteModel.getClusterData()[i].getDataIndices().length; i2++) {
 
+				exec.setProgress((double)(i*m_silhouetteModel.getClusterData()[0].getDataIndices().length + i2) /
+						(double)(m_silhouetteModel.getClusterData().length * m_silhouetteModel.getClusterData()[i].getDataIndices().length),
+						"Calculating S for row " + i*m_silhouetteModel.getClusterData()[0].getDataIndices().length + i2);
+
 				// By definition, if the cluster length of a data point = 1, then its Silhouette Coefficient is 0
 				if(m_silhouetteModel.getClusterData()[i].getDataIndices().length == 1) {
 					s = 0;
-					System.out.println("S @ cluster " + i + " row " + i2 + ": " + s + " because |C| = 1");
+					System.out.println("S @ cluster " + m_silhouetteModel.getClusterData()[i].getName() + " row " + i2 + ": " + s + " because |C| = 1");
+
+					// step 4 - save value into internal cluster representation
+					m_silhouetteModel.getClusterData()[i].setCoefficient(i2, s);
 					continue;
 				}
 
@@ -220,7 +232,6 @@ public class SilhouetteNodeModel extends NodeModel {
 						case STRING:
 							strings.add((String) m_internalColumns[i3].getCell(m_silhouetteModel.getClusterData()[i].getDataIndices()[i2]));
 							break;
-
 						default:
 							//TODO throw an exception instead, not that it's likely to happen
 							System.out.print("WHAT IS THIS " + m_internalColumns[i3].getType() + " DOING HERE?");
@@ -262,15 +273,7 @@ public class SilhouetteNodeModel extends NodeModel {
 								doubles2.stream().toArray(Double[]::new),
 								integers2.stream().toArray(Integer[]::new));
 
-						// System.out.println("Distance between " + i + ";" + i2 + " and " + i + ";" + i3 + " is " + euclidianDistance(strings.stream().toArray(String[]::new),
-						//		doubles.stream().toArray(Double[]::new),
-						//		integers.stream().toArray(Integer[]::new),
-						//		strings2.stream().toArray(String[]::new),
-						//		doubles2.stream().toArray(Double[]::new),
-						//		integers2.stream().toArray(Integer[]::new)) + " ( " + dist1 + " )");
 
-					} else {
-						// System.out.println("i3 = i2, distance between c: " + i + " r: " + i2 + " and r: " + i3 + " not calculated");
 					}
 				}
 
@@ -316,10 +319,7 @@ public class SilhouetteNodeModel extends NodeModel {
 									strings2.stream().toArray(String[]::new),
 									doubles2.stream().toArray(Double[]::new),
 									integers2.stream().toArray(Integer[]::new));
-							
-							// System.out.println("Distance between " + i + ";" + i2 + " and " + i3 + ";" + i4 + " is " + currDist + " ( " + dist2 + " )");
 
-							// System.out.println("Distance between " + i + ";" + i2 + " and " + i3 + ";" + i4 + " is " + newdist);
 						}
 
 						currDist /= m_silhouetteModel.getClusterData()[i3].getDataIndices().length -1;
@@ -328,9 +328,6 @@ public class SilhouetteNodeModel extends NodeModel {
 							dist2 = currDist;
 							neighbourIndex = i3; 
 						}
-						
-					} else {
-						// System.out.println("i3 = i, distance between c: " + i + " r: " + i2 + " and row k in c: " + i3 + " not calculated");
 					}
 				}
 
@@ -338,8 +335,6 @@ public class SilhouetteNodeModel extends NodeModel {
 				// the cluster length = 1 case handled in beginning of the iteration )
 
 				s = (dist2 - dist1) / Math.max(dist1,  dist2);
-
-				// System.out.println("S @ cluster " + i + " row " + i2 + ": " + String.format("%.2f", s) + ",  dist1: " + String.format("%.2f", dist1) + ", dist2: " + String.format("%.2f", dist2) + ", neighbour: " + neighbourIndex);
 
 				// step 4 - save value into internal cluster representation
 				m_silhouetteModel.getClusterData()[i].setCoefficient(i2, s);
@@ -404,7 +399,12 @@ public class SilhouetteNodeModel extends NodeModel {
 	 */
 	@Override
 	protected void reset() {
-		// TODO generated method stub
+
+		// nullify internal models
+
+		m_silhouetteModel = null;
+		m_internalColumns  = null;
+
 	}
 
 	/**
@@ -500,6 +500,7 @@ public class SilhouetteNodeModel extends NodeModel {
 	@Override
 	protected void saveSettingsTo(final NodeSettingsWO settings) {
 		m_clusterColumn.saveSettingsTo(settings);
+		m_stringDistCalc.saveSettingsTo(settings);
 	}
 
 	/**
@@ -509,6 +510,7 @@ public class SilhouetteNodeModel extends NodeModel {
 	protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
 			throws InvalidSettingsException {
 		m_clusterColumn.loadSettingsFrom(settings);
+		m_stringDistCalc.loadSettingsFrom(settings);
 	}
 
 	/**
@@ -518,6 +520,7 @@ public class SilhouetteNodeModel extends NodeModel {
 	protected void validateSettings(final NodeSettingsRO settings)
 			throws InvalidSettingsException {
 		m_clusterColumn.validateSettings(settings);
+		m_stringDistCalc.validateSettings(settings);
 	}
 
 	/**
@@ -527,7 +530,31 @@ public class SilhouetteNodeModel extends NodeModel {
 	protected void loadInternals(final File internDir,
 			final ExecutionMonitor exec) throws IOException,
 	CanceledExecutionException {
-		// TODO generated method stub
+		File settingsFile = new File(internDir, SETTINGS_FILE_NAME);
+		FileInputStream in = new FileInputStream(settingsFile);
+		NodeSettingsRO settings = NodeSettings.loadFromXML(in);
+		try {
+
+			InternalCluster[] internalClusters = new InternalCluster[settings.getInt("clustersNum")];
+
+			String clusterName;
+			Color clusterColor;
+			Integer[] clusterDataIndices;
+			Double[] clusterCoefficients;
+			for(int i = 0; i < internalClusters.length; i++) {
+				clusterName = settings.getString("name" + i);
+				clusterColor = new Color(settings.getInt("color" + i));
+				clusterDataIndices = ArrayUtils.toObject(settings.getIntArray("dataIndices" + i));
+				clusterCoefficients = ArrayUtils.toObject(settings.getDoubleArray("coefficients" + i));
+
+				internalClusters[i] = new InternalCluster(clusterName, clusterColor, clusterDataIndices, clusterCoefficients);
+			}
+
+			m_silhouetteModel = new SilhouetteModel(internalClusters);
+
+		} catch (InvalidSettingsException e) {
+			throw new IOException(e);
+		}
 	}
 
 	/**
@@ -537,7 +564,22 @@ public class SilhouetteNodeModel extends NodeModel {
 	protected void saveInternals(final File internDir,
 			final ExecutionMonitor exec) throws IOException,
 	CanceledExecutionException {
-		// TODO generated method stub
+		NodeSettings internalSettings = new NodeSettings("Silhouette");
+
+		int k = 0;
+		for(InternalCluster ic : m_silhouetteModel.getClusterData()) {
+			internalSettings.addString("name" + k, ic.getName());
+			internalSettings.addInt("color" + k, ic.getColor().getRGB());
+			internalSettings.addDoubleArray("coefficients" + k, ArrayUtils.toPrimitive(ic.getCoefficients()));
+			internalSettings.addIntArray("dataIndices" + k, ArrayUtils.toPrimitive(ic.getDataIndices()));
+			k++;
+		}
+
+		internalSettings.addInt("clustersNum", k);
+
+		File f = new File(internDir, SETTINGS_FILE_NAME);
+		FileOutputStream out = new FileOutputStream(f);
+		internalSettings.saveToXML(out);
 	}
 
 
@@ -551,9 +593,8 @@ public class SilhouetteNodeModel extends NodeModel {
 	/**
 	 * Returns SettingsModel of cluster data column index
 	 */
-	public static SettingsModelIntegerBounded getClusterColumn() {
+	public static SettingsModelInteger getClusterColumn() {
 		return m_clusterColumn;
 	}
 
 }
-

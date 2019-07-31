@@ -11,14 +11,14 @@ public class SilhouetteModel {
 		this.clusterData = clusterData;
 	}
 	
-	public SilhouetteModel(int clustersNumber, boolean generateRandomData) {
-		clusterData = new InternalCluster[clustersNumber];
-		if(generateRandomData) {
-			for(int i = 0; i < clustersNumber; i++) {
-				clusterData[i] = new InternalCluster(i);
-			}
-		}
-	}
+//	public SilhouetteModel(int clustersNumber, boolean generateRandomData) {
+//		clusterData = new InternalCluster[clustersNumber];
+//		if(generateRandomData) {
+//			for(int i = 0; i < clustersNumber; i++) {
+//				clusterData[i] = new InternalCluster(i);
+//			}
+//		}
+//	}
 
 	public InternalCluster[] getClusterData() {
 		return clusterData;

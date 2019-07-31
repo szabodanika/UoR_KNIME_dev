@@ -11,6 +11,7 @@
         
         <tab name="Options">
             <option name="Index of Cluster Column">Index of the column that contains the cluster data</option>
+            <option name="Method of String distance calculation">The node will use this algorithm to determine distance between Strings</option>
         </tab>
     </fullDescription>
     

@@ -19,27 +19,34 @@ public class InternalCluster {
 		this.coefficients = new Double[dataIndices.length];
 	}
 	
-	public InternalCluster(int uniqueIndex) {
-		generateRandomData(uniqueIndex);
+	public InternalCluster(String name, Color color, Integer[] dataIndices, Double[] coefficients) {
+		this.name = name;
+		this.color = color;
+		this.dataIndices = dataIndices;
+		this.coefficients = coefficients;
 	}
 	
+//	public InternalCluster(int uniqueIndex) {
+//		generateRandomData(uniqueIndex);
+//	}
+//	
 	// This will give the cluster some randomized content
-	public void generateRandomData(int uniqueIndex) {
-		Random rnd = new Random();
-		
-		this.name = "Cluster" + uniqueIndex;
-		this.color = Color.getHSBColor((float)rnd.nextInt(360), (float)rnd.nextDouble(), (float)rnd.nextDouble());
-		
-		int n = rnd.nextInt(20) + 80;
-		
-		coefficients = new Double[n];
-		
-		for(int i = 0; i < n; i++) {
-			coefficients[i] = rnd.nextDouble()-0.1;
-		}
-		
-		sort();
-	}
+//	public void generateRandomData(int uniqueIndex) {
+//		Random rnd = new Random();
+//		
+//		this.name = "Cluster" + uniqueIndex;
+//		this.color = Color.getHSBColor((float)rnd.nextInt(360), (float)rnd.nextDouble(), (float)rnd.nextDouble());
+//		
+//		int n = rnd.nextInt(20) + 80;
+//		
+//		coefficients = new Double[n];
+//		
+//		for(int i = 0; i < n; i++) {
+//			coefficients[i] = rnd.nextDouble()-0.1;
+//		}
+//		
+//		sort();
+//	}
 	
 	public void sort() {
 		Arrays.sort(coefficients);

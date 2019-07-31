@@ -11,8 +11,8 @@ public class SilhouetteCellFactory extends SingleCellFactory{
 
 	private SilhouetteModel m_silhouetteModel;
 	
-	private static int clusterIndex = 0;
-	private static int rowIndex = 0;
+	private int clusterIndex = 0;
+	private int rowIndex = 0;
 
 	public SilhouetteCellFactory(DataColumnSpec newColSpec, SilhouetteModel silhouetteModel) {
 		super(newColSpec);
@@ -23,6 +23,7 @@ public class SilhouetteCellFactory extends SingleCellFactory{
 	@Override
 	public DataCell getCell(DataRow row) {
 		Double value = null;
+		
 		try {
 			
 			value = m_silhouetteModel.getClusterData()[clusterIndex].getCoefficients()[rowIndex];
@@ -31,21 +32,20 @@ public class SilhouetteCellFactory extends SingleCellFactory{
 			
 			if(rowIndex >= m_silhouetteModel.getClusterData()[clusterIndex].getCoefficients().length){
 				
+				if(clusterIndex >= m_silhouetteModel.getClusterData().length) {
+					//all the cells have been returned
+					System.out.print("Out of bounds cell @ cluster " + clusterIndex + " row " + rowIndex + " was requested");
+					return DataType.getMissingCell();
+				} 
+				
 				clusterIndex ++;
 				rowIndex = 0;
-				
-			} 
-			
-			if(clusterIndex >= m_silhouetteModel.getClusterData().length) {
-				//all the cells have been returned
-				return DataType.getMissingCell();
-			} 
+			}
 			
 		} catch (ArrayIndexOutOfBoundsException e) {
-			System.out.println("Cluster " + clusterIndex + " Row " + rowIndex + " is out of bounds");
+			System.out.println("Cluster " + clusterIndex + " Row " + rowIndex + " is out of bounds. Try resetting the node.");
+			value = 0d;
 		}
-		
-		
 		
 		return new DoubleCell(value);
 		
