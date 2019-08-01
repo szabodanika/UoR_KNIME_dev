@@ -11,52 +11,62 @@ import org.knime.core.node.NodeView;
  * @author University of Reading
  */
 public class SilhouetteNodeFactory 
-        extends NodeFactory<SilhouetteNodeModel> {
+extends NodeFactory<SilhouetteNodeModel> {
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public SilhouetteNodeModel createNodeModel() {
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public SilhouetteNodeModel createNodeModel() {
 		// Create and return a new node model.
-        return new SilhouetteNodeModel();
-    }
+		return new SilhouetteNodeModel();
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getNrNodeViews() {
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public int getNrNodeViews() {
 		// The number of views the node should have, in this cases there is none.
-        return 1;
-    }
+		return 3;
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeView<SilhouetteNodeModel> createNodeView(final int viewIndex,
-            final SilhouetteNodeModel nodeModel) {
-    	return new SilhouetteNodeView(nodeModel);
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public NodeView<SilhouetteNodeModel> createNodeView(final int viewIndex,
+			final SilhouetteNodeModel nodeModel) {
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean hasDialog() {
+		switch(viewIndex) {
+			case 0:
+				return new SilhouetteNodeChartView(nodeModel, false);
+			case 1:
+				return new SilhouetteNodeChartView(nodeModel, true);
+			case 2:
+				return new SilhouetteNodeStatsView(nodeModel);
+		}
+		return null;
+
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public boolean hasDialog() {
 		// Indication whether the node has a dialog or not.
-        return true;
-    }
+		return true;
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeDialogPane createNodeDialogPane() {
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public NodeDialogPane createNodeDialogPane() {
 		// This example node has a dialog, hence we create and return it here. Also see "hasDialog()".
-        return new SilhouetteNodeDialog();
-    }
+		return new SilhouetteNodeDialog();
+	}
 
 }
 

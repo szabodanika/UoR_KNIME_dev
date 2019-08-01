@@ -6,14 +6,18 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Iterator;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.text.similarity.HammingDistance;
+import org.apache.commons.text.similarity.JaccardDistance;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomainCreator;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
+import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.StringValue;
 import org.knime.core.data.container.CellFactory;
@@ -22,6 +26,7 @@ import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.data.sort.BufferedDataTableSorter;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -70,9 +75,11 @@ public class SilhouetteNodeModel extends NodeModel {
 	/** All available String distance calc methods */
 	public static final String[] STRING_CALC_METHODS = new String[] {
 			"Levenshtein",
+			"Jaro-Winkler",
 			"Hamming",
-			"Trigram",
-			"Jaro-Winkler"
+			"Jaccard",
+			"Longest Common Subsequence"
+			
 	};
 
 	/** Internal model save file name */
@@ -124,6 +131,23 @@ public class SilhouetteNodeModel extends NodeModel {
 	@Override
 	protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
 			final ExecutionContext exec) throws Exception {
+		
+		
+		/** sort the data so the extracting algorithms will work */
+		
+		Comparator<DataRow> comparator = new Comparator<DataRow>() {
+
+	        @Override
+	        public int compare(DataRow d1, DataRow d2) {
+	            String val1 = ((StringCell)d1.getCell(m_adjustedClusterColumn)).getStringValue();
+	            String val2 = ((StringCell)d2.getCell(m_adjustedClusterColumn)).getStringValue();
+	            return val1.compareToIgnoreCase(val2);
+	        }
+	    };
+	    
+		BufferedDataTableSorter sorter = new BufferedDataTableSorter(inData[IN_PORT], comparator);
+		
+		inData[IN_PORT] = sorter.sort(exec);
 
 		/** import data to simplified internal model, hopefully this step can be removed later on and run the 
 		 * algorithm directly on the BufferedDataTable */
@@ -374,11 +398,11 @@ public class SilhouetteNodeModel extends NodeModel {
 			throw new DimensionMismatchException(i.length, i2.length);
 		}
 
-		//TODO shouldn't we weigh the distanced somehow?
+		//TODO shouldn't we weigh the distances somehow?
 
 		//calculate string distances
 		for(int l = 0; l < s.length; l++) {
-			dist += Math.pow(StringUtils.getLevenshteinDistance(s[l], s2[l]), 2);
+			dist += Math.pow(getStringDistance(s[l], s2[l]), 2);
 		}
 
 		//calculate double distances
@@ -392,7 +416,29 @@ public class SilhouetteNodeModel extends NodeModel {
 		}
 
 		return Math.sqrt(dist);
-	}                                                                          
+	}                   
+
+	private static double getStringDistance(String s1, String s2) {
+
+		if(m_stringDistCalc.getStringValue().equals(STRING_CALC_METHODS[0])) {
+
+			return StringUtils.getLevenshteinDistance(s1, s2);
+
+		} else if( m_stringDistCalc.getStringValue().equals(STRING_CALC_METHODS[1])){
+
+			return StringUtils.getJaroWinklerDistance(s1, s2);
+
+		} else if( m_stringDistCalc.getStringValue().equals(STRING_CALC_METHODS[2])){
+			
+			return new HammingDistance().apply(s1, s2);
+
+		} else if( m_stringDistCalc.getStringValue().equals(STRING_CALC_METHODS[3])){
+
+			return new JaccardDistance().apply(s1, s2);
+
+		} else return StringUtils.getLevenshteinDistance(s1, s2);
+
+	}
 
 	/**
 	 * {@inheritDoc}
@@ -416,7 +462,6 @@ public class SilhouetteNodeModel extends NodeModel {
 
 		//TODO implement more validations  	
 
-
 		// Checking whether the input table has at least 2 columns
 		boolean atLeast2Columns = false;
 		atLeast2Columns = inSpecs[IN_PORT].getNumColumns() >= 2;
@@ -424,7 +469,6 @@ public class SilhouetteNodeModel extends NodeModel {
 			throw new InvalidSettingsException(
 					"Input table must have at least 2 columns. One for the original data and one for clusters.");
 		}
-
 
 		// Checking whether the chosen/default cluster data column is valid
 		boolean validClusterDataColumn = false;

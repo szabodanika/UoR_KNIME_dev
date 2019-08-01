@@ -3,7 +3,8 @@ Bundle-ManifestVersion: 2
 Bundle-Name: Silhouette-Node extension for KNIME Workbench
 Bundle-SymbolicName: uk.ac.reading.cs.knime.silhouette; singleton:=true
 Bundle-Version: 1.0.0.qualifier
-Bundle-ClassPath: silhouette.jar
+Bundle-ClassPath: silhouette.jar,
+ lib/commons-text-1.7.jar
 Bundle-Activator: uk.ac.reading.cs.knime.silhouette.SilhouetteNodePlugin
 Bundle-Vendor: University of Reading
 Require-Bundle: org.eclipse.core.runtime,
