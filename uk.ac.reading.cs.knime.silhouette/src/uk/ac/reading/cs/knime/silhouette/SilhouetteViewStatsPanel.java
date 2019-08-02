@@ -23,10 +23,11 @@ public class SilhouetteViewStatsPanel extends JPanel {
 	private static int HEIGHT = 600;
 	
 	/** The whole table will round to this many decimals */
-	private static int DECIMALS = 3; 
+	private static int DECIMALS = 2; 
 	
-	/** This array contians colours from red to green for the cell backgrounds */
+	/** This array contains colours from red to green for the cell backgrounds */
 	private static final Color[] colorGradient = new Color[] {
+			Color.decode("#dddddd"),
 			Color.decode("#a7ff8f"),
 			Color.decode("#d4ff8f"),
 			Color.decode("#fffb8f"),
@@ -45,8 +46,8 @@ public class SilhouetteViewStatsPanel extends JPanel {
 		/** Names of columns in JTable */
 		String[] columns = {"Cluster",
 				"Avg. S",
-				"Sqr Avg. S",
-				"St. Dev.",
+				"Sqr. Avg. S",
+				"Std. Dev.",
 				"Num. S<0",
 				"% S<0"};
 
@@ -111,14 +112,14 @@ public class SilhouetteViewStatsPanel extends JPanel {
 			data[i][0] = silhouetteModel.getClusterData()[i].getName();;
 			for(int i2 = 0; i2 < vals.length; i2++) {
 				/** Value goes in data array with +1 offset because index 0 is the cluster name */
-				data[i][i2 + 1] = round(vals[i2]);
+				data[i][i2 + 1] = vals[i2];
 				
 				/** Adding value to avg sum */
-				avgVals[i2] += round(vals[i2]);
+				avgVals[i2] += vals[i2];
 				
 				/** Checking if it is a min or a max */
-				if(round(vals[i2]) < minVals[i2]) minVals[i2] = round(vals[i2]);
-				if(round(vals[i2]) > maxVals[i2]) maxVals[i2] = round(vals[i2]);
+				if(vals[i2] < minVals[i2]) minVals[i2] = vals[i2];
+				if(vals[i2] > maxVals[i2]) maxVals[i2] = vals[i2];
 			}
 		}
 
@@ -131,7 +132,7 @@ public class SilhouetteViewStatsPanel extends JPanel {
 		/** Adding the average row to the bottom */
 		data[data.length-1][0] = "Average";
 		for(int i2 = 0; i2 < avgVals.length; i2++) {
-			data[data.length-1][i2+1] = round(avgVals[i2]);
+			data[data.length-1][i2+1] = avgVals[i2];
 		}
 
 		/** The JTable we show */
@@ -147,10 +148,21 @@ public class SilhouetteViewStatsPanel extends JPanel {
 				/** By default JTable renders values as JLabels */
 				JLabel l = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, col);
 				
+				if(isSelected) l.setForeground(Color.blue);
+				else l.setForeground(Color.black);
+				
+				if(col == 0) {
+					if(row != data.length-1) l.setBackground(silhouetteModel.getClusterData()[row].getColor());
+					else l.setBackground(colorGradient[0]);
+					return l;
+				}
+				
 				TableModel tableModel = table.getModel();
 				
+				l.setText(String.valueOf(round(Double.valueOf(l.getText()))));
+				
 				/** The last row is the Average, no need to color it */
-				if(row == data.length - 1) l.setBackground(Color.white);
+				if(row == data.length - 1) l.setBackground(colorGradient[0]);
 				else l.setBackground(colorGradient[getValueRating(tableModel.getValueAt(row, col), col)]);
 				
 				return l;
@@ -167,22 +179,23 @@ public class SilhouetteViewStatsPanel extends JPanel {
 			}
 			private int fifths(double val, double min, double max, boolean higherIsBetter) {
 				double diff = max - min;
-				if(diff == 0) return 2;
+				if(round(diff) == 0) return 0;
+				
 				val = val - min;
 				double ratio = val/diff;
 				if(!higherIsBetter) ratio = 1-ratio;
-				if(ratio < 0.2) return 4;
-				if(ratio < 0.4) return 3;
-				if(ratio < 0.6) return 2;
-				if(ratio < 0.8) return 1;
-				return 0;
+				if(ratio < 0.2) return 5;
+				if(ratio < 0.4) return 4;
+				if(ratio < 0.6) return 3;
+				if(ratio < 0.8) return 2;
+				return 1;
 			}
 			
 		};
 		
-		/** Setting the renderer for each column except the one containing cluster names */
-		for(int i = 0; i < avgVals.length; i++) {
-			table.getColumnModel().getColumn(i+1).setCellRenderer(renderer);
+		/** Setting the renderer for each column*/
+		for(int i = 0; i < columns.length; i++) {
+			table.getColumnModel().getColumn(i).setCellRenderer(renderer);
 		}
 		
 		
@@ -195,7 +208,13 @@ public class SilhouetteViewStatsPanel extends JPanel {
 
 	/** Just a little tool to round doubles */
 	public static double round(double value) {
-		BigDecimal bd = new BigDecimal(value);
+		BigDecimal bd;
+		try {
+			bd = new BigDecimal(value);
+		} catch(Exception e) {
+			bd = new BigDecimal(Double.MAX_VALUE);
+		}
+		
 		bd = bd.setScale(DECIMALS, RoundingMode.HALF_UP);
 		return bd.doubleValue();
 	}

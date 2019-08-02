@@ -37,7 +37,7 @@ public class SilhouetteNodeChartView extends NodeView<SilhouetteNodeModel> {
      */
     @Override
     protected void modelChanged() {
-        // TODO: generated method stub
+    	this.m_panel.draw();
     }
 
     /**
@@ -45,7 +45,7 @@ public class SilhouetteNodeChartView extends NodeView<SilhouetteNodeModel> {
      */
     @Override
     protected void onClose() {
-        // TODO: generated method stub
+        /** Nothing to do here */
     }
 
     /**
@@ -53,7 +53,7 @@ public class SilhouetteNodeChartView extends NodeView<SilhouetteNodeModel> {
      */
     @Override
     protected void onOpen() {
-        // TODO: generated method stub
+    	/** Nothing to do here */
     }
     
 }

@@ -80,7 +80,7 @@ public class SilhouetteViewChartPanel extends JPanel {
 
 		try {
 
-			int rowIndex = -1;
+			int rowIndex = 0;
 			for(InternalCluster cf: data.getClusterData()) {
 
 				cf.sort();
@@ -104,7 +104,7 @@ public class SilhouetteViewChartPanel extends JPanel {
 		XYSeriesCollection dataset = new XYSeriesCollection( );        
 
 		for(InternalCluster cf: data.getClusterData()) {
-			int rowIndex = -1;
+			int rowIndex = 0;
 			
 			cf.sort();
 			
