@@ -1,5 +1,12 @@
 package uk.ac.reading.cs.knime.silhouette;
 
+
+/**
+ * Container class for the clusterData list
+ * 
+ * @author University of Reading
+ *
+ */
 public class SilhouetteModel {
 
 	/** 

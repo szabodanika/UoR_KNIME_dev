@@ -80,7 +80,7 @@ public class SilhouetteNodeModel extends NodeModel {
 			"Hamming",
 			"Jaccard",
 			"Longest Common Subsequence"
-			
+
 	};
 
 	/** Internal model save file name */
@@ -131,22 +131,22 @@ public class SilhouetteNodeModel extends NodeModel {
 	@Override
 	protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
 			final ExecutionContext exec) throws Exception {
-		
-		
-		/** Sort the data so the extracting algorithms will work */
+
+
+		// Sort the data so the extracting algorithms will work 
 		Comparator<DataRow> comparator = new Comparator<DataRow>() {
-	        @Override
-	        public int compare(DataRow d1, DataRow d2) {
-	            String val1 = ((StringCell)d1.getCell(m_adjustedClusterColumn)).getStringValue();
-	            String val2 = ((StringCell)d2.getCell(m_adjustedClusterColumn)).getStringValue();
-	            return val1.compareToIgnoreCase(val2);
-	        }
-	    };
+			@Override
+			public int compare(DataRow d1, DataRow d2) {
+				String val1 = ((StringCell)d1.getCell(m_adjustedClusterColumn)).getStringValue();
+				String val2 = ((StringCell)d2.getCell(m_adjustedClusterColumn)).getStringValue();
+				return val1.compareToIgnoreCase(val2);
+			}
+		};
 		BufferedDataTableSorter sorter = new BufferedDataTableSorter(inData[IN_PORT], comparator);
 		inData[IN_PORT] = sorter.sort(exec);
 
-		/** Import data to simplified internal model, hopefully this step can be removed later on and run the 
-		 * algorithm directly on the BufferedDataTable */
+		// Import data to simplified internal model, hopefully this step can be removed later on and run the 
+		// algorithm directly on the BufferedDataTable 
 		CloseableRowIterator iterator = inData[0].iterator();
 		int currentColumn = 0;
 		int currentRow = 0;
@@ -172,30 +172,30 @@ public class SilhouetteNodeModel extends NodeModel {
 			currentRow++;
 		}
 
-		/** Let's save number of rows, we will need it later */
+		// Let's save number of rows, we will need it later 
 		m_totalRowNumber = currentRow;
 
-		/** Loading names and colours of clusters into internal model*/
+		// Loading names and colours of clusters into internal model
 		ArrayList<InternalCluster> tempClusterData = new ArrayList<>();
 		InternalColumn<String> clusterColumn = m_internalColumns[m_adjustedClusterColumn];
 		int clusterNum = -1;
 		String lastClusterName = null;
 		ArrayList<Integer> lastClusterRowIndices = new ArrayList<>();
 		Color lastClusterColor = null;
-		
-		/** Iterating through every cell in the column containing cluster names */
+
+		// Iterating through every cell in the column containing cluster names 
 		for(int i = 0; i < clusterColumn.getCells().size(); i++) {
 			if(!clusterColumn.getCell(i).equals(lastClusterName)) {
 				lastClusterName = clusterColumn.getCell(i);
 				lastClusterRowIndices = new ArrayList<>();
 				clusterNum++;
-				/** Choosing a nice color from the predefined list.
-				 * Unfortunately after 20 we will have to reuse colors */
+				// Choosing a nice color from the predefined list.
+				// Unfortunately after 20 we will have to reuse colors 
 				lastClusterColor = COLOR_LIST[clusterNum%20];
 			}
 			lastClusterRowIndices.add(i);
-			
-			/** We add the cluster if this row is the last in the cluster or in the entire table */
+
+			// We add the cluster if this row is the last in the cluster or in the entire table */
 			if(i == clusterColumn.getCells().size() - 1) {
 				tempClusterData.add(new InternalCluster(lastClusterName, lastClusterColor, lastClusterRowIndices.toArray(new Integer[lastClusterRowIndices.size()])));
 			} else if(!clusterColumn.getCell(i+1).equals(lastClusterName) && lastClusterName != null) {
@@ -203,40 +203,41 @@ public class SilhouetteNodeModel extends NodeModel {
 			}
 		}
 
-		/** Put all extracted cluster data into an internal container model */
+		// Put all extracted cluster data into an internal container model */
 		m_silhouetteModel = new SilhouetteModel(tempClusterData.toArray(new InternalCluster[tempClusterData.size()]));
 
-		/** Now let's calculate the Silhouette Coefficients  */
-		/** These are the main variables we are going to use in the loop, let's give them appropriate
-		 * initial values */
+		// Now let's calculate the Silhouette Coefficients  
+		// These are the main variables we are going to use in the loop, let's give them appropriate
+		// initial values 
 		double s = 0, dist1 = 0, dist2 = Double.MAX_VALUE;
 		int neighbourIndex = -1;
 
-		/** Main Silhouette calculation loop */
-		/** For each cluster */
+		// Main Silhouette calculation loop 
+		// For each cluster 
 		for(int i = 0; i < m_silhouetteModel.getClusterData().length; i++) {
-			/** For each row inside the cluster */
+			// For each row inside the cluster 
 			for(int i2 = 0; i2 <m_silhouetteModel.getClusterData()[i].getDataIndices().length; i2++) {
-				/** Update the executing environment first */
+
+				// Update the executing environment first 
 				exec.setProgress((double)(i*m_silhouetteModel.getClusterData()[0].getDataIndices().length + i2) /
 						(double)(m_silhouetteModel.getClusterData().length * m_silhouetteModel.getClusterData()[i].getDataIndices().length),
 						"Calculating S for row " + i*m_silhouetteModel.getClusterData()[0].getDataIndices().length + i2);
 
-				/** By definition, if the cluster length of a data point = 1, then its Silhouette Coefficient is 0 */
+				// By definition, if the cluster length of a data point = 1, then its Silhouette Coefficient is 0 
 				if(m_silhouetteModel.getClusterData()[i].getDataIndices().length == 1) {
 					s = 0;
 
-					/** Save value into internal cluster representation (step 4) */
+					// Save value into internal cluster representation (step 4) 
 					m_silhouetteModel.getClusterData()[i].setCoefficient(i2, s);
 					continue;
 				}
 
-				/** Getting values of dimensions of each type in current point */
-				
-				/** It is needed to separate values into separate arrays for each type
-				 * beacuse the distanca calculation method will calculate the distance
-				 * between entries of different types separately and we also have to check
-				 * that the dimensions match on the 2 points*/
+				// Getting values of dimensions of each type in current point 
+
+				// It is needed to separate values into separate arrays for each type
+				// beacuse the distanca calculation method will calculate the distance
+				// between entries of different types separately and we also have to check
+				// that the dimensions match on the 2 points
 				ArrayList<String> strings = new ArrayList<>();
 				ArrayList<Double> doubles = new ArrayList<>();
 				ArrayList<Integer> integers = new ArrayList<>();
@@ -259,24 +260,24 @@ public class SilhouetteNodeModel extends NodeModel {
 					}
 				}
 
-				/** Calculating distance from other points in the same cluster */
-				/** Making sure dist1 has an appropriate initial value */
+				// Calculating distance from other points in the same cluster 
+				// Making sure dist1 has an appropriate initial value 
 				dist1 = 0;
 
-				/** Creating reusable variables for the next loop */
+				// Creating reusable variables for the next loop 
 				ArrayList<String> strings2;
 				ArrayList<Double> doubles2;
 				ArrayList<Integer> integers2;
-				
-				/** Getting dimensions of all other points in the cluster and calculating distance from all of them */
+
+				// Getting dimensions of all other points in the cluster and calculating distance from all of them 
 				for(int i3 = 0; i3 < m_silhouetteModel.getClusterData()[i].getDataIndices().length; i3++) {
 					if(i2 != i3) {
-						/** Resetting every dimension */
+						// Resetting every dimension 
 						strings2 = new ArrayList<>();
 						doubles2 = new ArrayList<>();
 						integers2 = new ArrayList<>();
 
-						/** Loading data from internal columns to separated dimensions */
+						// Loading data from internal columns to separated dimensions 
 						for(int i4 = 0; i4 < m_internalColumns.length; i4++) {
 							if(i4 != m_adjustedClusterColumn) {
 								switch(m_internalColumns[i4].getType()) {
@@ -293,7 +294,7 @@ public class SilhouetteNodeModel extends NodeModel {
 							}
 						}
 
-						/** Convert all lists to arrays, calculate distance and add value to dist */				
+						// Convert all lists to arrays, calculate distance and add value to dist			
 						dist1 += euclidianDistance(strings.stream().toArray(String[]::new),
 								doubles.stream().toArray(Double[]::new),
 								integers.stream().toArray(Integer[]::new),
@@ -303,24 +304,24 @@ public class SilhouetteNodeModel extends NodeModel {
 					}
 				}
 
-				/** Dividing by cluster length as last step for euclidian distance */
+				// Dividing by cluster length as last step for euclidian distance 
 				dist1 /=  m_silhouetteModel.getClusterData()[i].getDataIndices().length -1;
 
-				/** Here we are looking for the minimum mean distance from 
-				 * this point to any other cluster (neighbouring cluster) */
+				// Here we are looking for the minimum mean distance from 
+				// this point to any other cluster (neighbouring cluster) 
 				dist2 = Double.MAX_VALUE;
 				neighbourIndex = -1;
 				double currDist;
-				
-				/** Iterating through all clusters except the one we are in now */
+
+				// Iterating through all clusters except the one we are in now 
 				for(int i3 = 0; i3 < m_silhouetteModel.getClusterData().length; i3++) {
 					if(i3 != i) {
 						currDist = 0;
 
-						/** Iterating through all data points in this cluster */
+						// Iterating through all data points in this cluster 
 						for(int i4 = 0; i4 < m_silhouetteModel.getClusterData()[i3].getDataIndices().length; i4++) {
-							
-							/** Getting dimensions of data point */
+
+							// Getting dimensions of data point 
 							strings2 = new ArrayList<>();
 							doubles2 = new ArrayList<>();
 							integers2 = new ArrayList<>();
@@ -341,7 +342,7 @@ public class SilhouetteNodeModel extends NodeModel {
 								}
 							}
 
-							/** Convert all lists to arrays, calculate distance and add value to dist */
+							// Convert all lists to arrays, calculate distance and add value to dist 
 							currDist += euclidianDistance(strings.stream().toArray(String[]::new),
 									doubles.stream().toArray(Double[]::new),
 									integers.stream().toArray(Integer[]::new),
@@ -350,11 +351,11 @@ public class SilhouetteNodeModel extends NodeModel {
 									integers2.stream().toArray(Integer[]::new));
 
 						}
-						
-						/** Dividing by cluster length as last step of euclidian distance */
+
+						// Dividing by cluster length as last step of euclidian distance 
 						currDist /= m_silhouetteModel.getClusterData()[i3].getDataIndices().length -1;
 
-						/** Minimum check */
+						// Minimum check 
 						if(currDist < dist2) {
 							dist2 = currDist;
 							neighbourIndex = i3; 
@@ -362,31 +363,31 @@ public class SilhouetteNodeModel extends NodeModel {
 					}
 				}
 
-				/** Calculate final silhouette value in the other 2 cases (dist1 < dist2 and dist 1 > dist2,
-				 * the cluster length = 1 case handled in beginning of the iteration )
-				 * dist1 and dist2 shouldn't be equal and they definitely shouldn't be equal to 0 
-				 * but we will handle that case just to be safe */
+				// Calculate final silhouette value in the other 2 cases (dist1 < dist2 and dist 1 > dist2,
+				// the cluster length = 1 case handled in beginning of the iteration )
+				// dist1 and dist2 shouldn't be equal and they definitely shouldn't be equal to 0 
+				// but we will handle that case just to be safe 
 				if(dist1 == dist2 || Math.max(dist1,  dist2) == 0) s = 0;
 				else s =  (dist2 - dist1) / Math.max(dist1,  dist2);
 
-				/** Save value into internal cluster representation */
+				// Save value into internal cluster representation 
 				m_silhouetteModel.getClusterData()[i].setCoefficient(i2, s);
 			}
 		}
 
-		/** Finally we can assemble our output table by using our SilhouetteCellFactory
-		 * to simply generate a column containing all S values and appending it to the right side
-		 * of our sorted input table */
+		// Finally we can assemble our output table by using our SilhouetteCellFactory
+		// to simply generate a column containing all S values and appending it to the right side
+		// of our sorted input table 
 		CellFactory cellFactory = new SilhouetteCellFactory(createOutputColumnSpec(), m_silhouetteModel);
 		ColumnRearranger outputTable = new ColumnRearranger(inData[IN_PORT].getDataTableSpec());
 		outputTable.append(cellFactory);
 		BufferedDataTable bufferedOutput = exec.createColumnRearrangeTable(inData[IN_PORT], outputTable, exec);
 
-		/** Return it */
+		// Return it 
 		return new BufferedDataTable[]{bufferedOutput};
 	}
 
-	
+
 	/** Calculating the distance between to data point according to 
 	 * their String, Double and Integer values
 	 * @param s Every String value in the first data point
@@ -449,21 +450,22 @@ public class SilhouetteNodeModel extends NodeModel {
 	 *  */
 	private double getStringDistance(String s1, String s2) {
 
+		// 0 - Levenshtein Distance
 		if(m_stringDistCalc.getStringValue().equals(STRING_CALC_METHODS[0])) {
 			return StringUtils.getLevenshteinDistance(s1, s2);
-
+			// 1 - Jaro-Winkler Distance
 		} else if( m_stringDistCalc.getStringValue().equals(STRING_CALC_METHODS[1])){
 			return StringUtils.getJaroWinklerDistance(s1, s2);
-
+			// 2 - Hamming Distance
 		} else if( m_stringDistCalc.getStringValue().equals(STRING_CALC_METHODS[2])){
 			return new HammingDistance().apply(s1, s2);
-
+			// 3 - Jaccard Distance
 		} else if( m_stringDistCalc.getStringValue().equals(STRING_CALC_METHODS[3])){
 			return new JaccardDistance().apply(s1, s2);
-
+			// 4 - Longest Common Subsequence Distance
 		} else if( m_stringDistCalc.getStringValue().equals(STRING_CALC_METHODS[4])){
 			return new LongestCommonSubsequenceDistance().apply(s1, s2);
-
+			// ?? - Levenshtein Distance
 		} else return StringUtils.getLevenshteinDistance(s1, s2);
 
 	}
@@ -473,12 +475,8 @@ public class SilhouetteNodeModel extends NodeModel {
 	 */
 	@Override
 	protected void reset() {
-
-		// nullify internal models
-
 		m_silhouetteModel = null;
 		m_internalColumns  = null;
-
 	}
 
 	/**
@@ -490,7 +488,7 @@ public class SilhouetteNodeModel extends NodeModel {
 
 		//TODO implement more validations  	
 
-		// Checking whether the input table has at least 2 columns
+		// Checking whether the input has at least 2 columns (at least 1 data column and 1 cluster info)
 		boolean atLeast2Columns = false;
 		atLeast2Columns = inSpecs[IN_PORT].getNumColumns() >= 2;
 		if (!atLeast2Columns) {
@@ -498,31 +496,24 @@ public class SilhouetteNodeModel extends NodeModel {
 					"Input table must have at least 2 columns. One for the original data and one for clusters.");
 		}
 
-		// Checking whether the chosen/default cluster data column is valid
-		boolean validClusterDataColumn = false;
-		/** Since out of range indices are allowed for the cluster column, they are converted to in range indices **/
-		int clusterColumnIndex;
-
+		// Since out of range indices are allowed for the cluster column, they are converted to in range indices
 		if(m_clusterColumn.getIntValue() < 0) {
-			clusterColumnIndex = inSpecs[IN_PORT].getNumColumns() + m_clusterColumn.getIntValue()%inSpecs[IN_PORT].getNumColumns();
+			m_adjustedClusterColumn = inSpecs[IN_PORT].getNumColumns() + m_clusterColumn.getIntValue()%inSpecs[IN_PORT].getNumColumns();
+			if(m_adjustedClusterColumn < 0) m_adjustedClusterColumn += inSpecs[IN_PORT].getNumColumns();
 		} else {
-			clusterColumnIndex = m_clusterColumn.getIntValue()%inSpecs[IN_PORT].getNumColumns();
+			m_adjustedClusterColumn = m_clusterColumn.getIntValue()%inSpecs[IN_PORT].getNumColumns();
 		}
 
-		m_adjustedClusterColumn = clusterColumnIndex;
-
-		if(clusterColumnIndex < 0) clusterColumnIndex += inSpecs[IN_PORT].getNumColumns();
-
-		validClusterDataColumn = inSpecs[IN_PORT].getColumnSpec(clusterColumnIndex).getType().isCompatible(StringValue.class);
-
+		// Checking whether the chosen/default cluster data column is a valid String column with no missing cells 
+		boolean validClusterDataColumn = false;
+		validClusterDataColumn = inSpecs[IN_PORT].getColumnSpec(m_adjustedClusterColumn).getType().isCompatible(StringValue.class);
 		if (!validClusterDataColumn) {
 			throw new InvalidSettingsException(
 					"Selected/default cluster column is not a valid cluster column. It has to be String type.");
 		}
 
 
-		//TODO check if all columns are compatible
-
+		// Checking if all columns are compatible
 		if(atLeast2Columns&&validClusterDataColumn) {
 			// Passed all checks
 			m_internalColumns = new InternalColumn[inSpecs[IN_PORT].getNumColumns()];
@@ -547,14 +538,23 @@ public class SilhouetteNodeModel extends NodeModel {
 		return createOutputDataSpec(inSpecs);
 	}
 
-	private DataTableSpec[] createOutputDataSpec(DataTableSpec[] inSpecs) {
 
+	/** This method will generate the OutputDataSpec[] that configure() will return
+	 * 
+	 * @param inSpecs input specs from configure
+	 * @return DataTableSpec[] containing the single DataTableSpec for the one output with the labelled input data 
+	 * @see createOutputColumnSpec
+	 */
+	private DataTableSpec[] createOutputDataSpec(DataTableSpec[] inSpecs) {
 		DataTableSpec newTableSpec = new DataTableSpec(createOutputColumnSpec());
 		DataTableSpec dts = new DataTableSpec(inSpecs[IN_PORT], newTableSpec);
-
 		return new DataTableSpec[] {dts};
 	}
 
+	/** Generates DataColumpSpec the label column "Silhouette Coefficient"
+	 * 
+	 * @return DataColumnSpec for the coefficient column that will be appended to the input table
+	 */
 	private DataColumnSpec createOutputColumnSpec() {
 		DataColumnSpecCreator colSpecCreator = new DataColumnSpecCreator(
 				"Silhouette Coefficient", DoubleCell.TYPE);
@@ -562,7 +562,6 @@ public class SilhouetteNodeModel extends NodeModel {
 				new DoubleCell(-1d), new DoubleCell(1d));
 		colSpecCreator.setDomain(domainCreator.createDomain());
 		DataColumnSpec newColumnSpec = colSpecCreator.createSpec();
-
 		return newColumnSpec;
 	}
 
@@ -602,28 +601,39 @@ public class SilhouetteNodeModel extends NodeModel {
 	protected void loadInternals(final File internDir,
 			final ExecutionMonitor exec) throws IOException,
 	CanceledExecutionException {
+		
+		// loading settings from file
 		File settingsFile = new File(internDir, SETTINGS_FILE_NAME);
 		FileInputStream in = new FileInputStream(settingsFile);
 		NodeSettingsRO settings = NodeSettings.loadFromXML(in);
+		
 		try {
-
+			
+			//the cluster array that we will need to create the internal model
 			InternalCluster[] internalClusters = new InternalCluster[settings.getInt("clustersNum")];
-
+			
+			// reusable variables for the next loop
 			String clusterName;
 			Color clusterColor;
 			Integer[] clusterDataIndices;
 			Double[] clusterCoefficients;
+			
+			// for each cluster in the internal model
 			for(int i = 0; i < internalClusters.length; i++) {
+				
+				// load name, color, row indices and coefficients
 				clusterName = settings.getString("name" + i);
 				clusterColor = new Color(settings.getInt("color" + i));
 				clusterDataIndices = ArrayUtils.toObject(settings.getIntArray("dataIndices" + i));
 				clusterCoefficients = ArrayUtils.toObject(settings.getDoubleArray("coefficients" + i));
 
+				// and then add the new cluster to the cluster array
 				internalClusters[i] = new InternalCluster(clusterName, clusterColor, clusterDataIndices, clusterCoefficients);
 			}
 
+			// finally create the model using all the clusters
 			m_silhouetteModel = new SilhouetteModel(internalClusters);
-
+			
 		} catch (InvalidSettingsException e) {
 			throw new IOException(e);
 		}
@@ -636,8 +646,12 @@ public class SilhouetteNodeModel extends NodeModel {
 	protected void saveInternals(final File internDir,
 			final ExecutionMonitor exec) throws IOException,
 	CanceledExecutionException {
+		
+		// create new NodeSettings
 		NodeSettings internalSettings = new NodeSettings("Silhouette");
 
+		
+		// add name, color, coefficients and indices from each cluster to the settings object
 		int k = 0;
 		for(InternalCluster ic : m_silhouetteModel.getClusterData()) {
 			internalSettings.addString("name" + k, ic.getName());
@@ -647,8 +661,11 @@ public class SilhouetteNodeModel extends NodeModel {
 			k++;
 		}
 
+		// add the count of clusters so we will know how many we have when loading the settings
+		// TODO this should be implemented with an iterator of some sort, but this also works for now
 		internalSettings.addInt("clustersNum", k);
 
+		// save the file to disk
 		File f = new File(internDir, SETTINGS_FILE_NAME);
 		FileOutputStream out = new FileOutputStream(f);
 		internalSettings.saveToXML(out);
@@ -656,14 +673,14 @@ public class SilhouetteNodeModel extends NodeModel {
 
 
 	/**
-	 * Returns data model containing silhouette coefficients and chart info
+	 * @return SilhouetteModel containing silhouette coefficients and chart info
 	 */
 	public SilhouetteModel getSilhouetteModel() {
 		return m_silhouetteModel;
 	}
 
 	/**
-	 * Returns SettingsModel of cluster data column index
+	 * @return SettingsModelInteger of cluster data column index
 	 */
 	public SettingsModelInteger getClusterColumn() {
 		return m_clusterColumn;

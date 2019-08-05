@@ -4,14 +4,22 @@ import org.knime.core.node.NodeView;
 
 /**
  * <code>NodeView</code> for the "Silhouette" node.
+ * This is just an adapter, it does not generate any views, that will be SilhouetteViewChartPanel
  *
  * @author University of Reading
+ * 
+ * @see SilhouetteViewChartPanel
  */
 public class SilhouetteNodeChartView extends NodeView<SilhouetteNodeModel> {
 
-	
+	/**
+	 * The panel that will have the actual chart in it
+	 */
 	private SilhouetteViewChartPanel m_panel;
 	
+	/**
+	 * Silhouette model containing all the cluster data, including computed silhouette coefficients
+	 */
 	private SilhouetteModel silhouetteModel;
 	
     /**

@@ -9,9 +9,15 @@ import org.knime.core.node.NodeView;
  */
 public class SilhouetteNodeStatsView extends NodeView<SilhouetteNodeModel> {
 
-	
+	/**
+	 * The panel that will have the actual stats table
+	 */
 	private SilhouetteViewStatsPanel m_panel;
 	
+	
+	/**
+	 * Silhouette model containing all the cluster data, including computed silhouette coefficients
+	 */
 	private SilhouetteModel silhouetteModel;
 	
     /**
