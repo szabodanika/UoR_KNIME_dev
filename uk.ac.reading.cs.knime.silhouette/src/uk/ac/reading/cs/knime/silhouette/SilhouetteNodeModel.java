@@ -501,14 +501,6 @@ public class SilhouetteNodeModel extends NodeModel {
 		m_includeColumn = new boolean[m_dimension];
 		Collection<String> excList = m_usedColumns.getExcludeList();
 
-		for(String s: excList){
-			System.out.println(s);
-		}
-		
-		for(String s: m_usedColumns.getIncludeList()){
-			System.out.println(s);
-		}
-		
 		for (int i = 0; i < m_dimension; i++) {
 
 			if(i == clusterColumnIndex) continue;
