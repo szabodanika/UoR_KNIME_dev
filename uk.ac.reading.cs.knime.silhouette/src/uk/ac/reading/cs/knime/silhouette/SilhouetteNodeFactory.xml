@@ -10,8 +10,9 @@
         <intro> Silhouette is a method of validation of consistency within clusters of data, assigning a number between -1 and 1 to each data point. This will show whether the data points are more similar to their own clusters or to the others, which indicates if there may be too few or too many clusters.</intro>
         
         <tab name="Options">
-            <option name="Index of Cluster Column">Index of the column that contains the cluster data</option>
+            <option name="Cluster Column">Select the column that contains the cluster data</option>
             <option name="Method of String distance calculation">The node will use this algorithm to determine distance between Strings</option>
+            <option name="Included Columns">Select the columns you want to include in the evaluation. The selected cluster data column is always excluded</option>
         </tab>
     </fullDescription>
     

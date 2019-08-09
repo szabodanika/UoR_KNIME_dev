@@ -18,6 +18,14 @@ public class SilhouetteModel {
 		this.clusterData = clusterData;
 	}
 	
+	public int getRowCount() {
+		int rowCount = 0;
+		for(InternalCluster ic : clusterData) {
+			rowCount += ic.getDataIndices().length;
+		}
+		return rowCount;
+	}
+	
 //	public SilhouetteModel(int clustersNumber, boolean generateRandomData) {
 //		clusterData = new InternalCluster[clustersNumber];
 //		if(generateRandomData) {
