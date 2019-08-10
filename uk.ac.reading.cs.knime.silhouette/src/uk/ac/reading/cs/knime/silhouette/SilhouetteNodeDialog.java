@@ -8,10 +8,8 @@ import org.knime.core.data.StringValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
-import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
 import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
-import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
@@ -33,9 +31,9 @@ public class SilhouetteNodeDialog extends DefaultNodeSettingsPane {
 		super();
 
 		// Column containing cluster data
-				DialogComponentColumnNameSelection clusterColumn = new DialogComponentColumnNameSelection(
-				         new SettingsModelString(SilhouetteNodeModel.CFGKEY_CLUSTER_COLUMN, ""),
-				         "Cluster data column", 0, true, StringValue.class);
+		DialogComponentColumnNameSelection clusterColumn = new DialogComponentColumnNameSelection(
+		         new SettingsModelString(SilhouetteNodeModel.CFGKEY_CLUSTER_COLUMN, ""),
+		         "Cluster data column", 0, true, StringValue.class);
 		
 		// String distance calculation method
 		DialogComponentStringSelection stringDistMethod = new DialogComponentStringSelection(new SettingsModelString(

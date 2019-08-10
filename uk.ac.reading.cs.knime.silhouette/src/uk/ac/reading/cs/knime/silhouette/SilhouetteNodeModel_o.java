@@ -44,6 +44,8 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  * <code>NodeModel</code> for the "Silhouette" node.
  *
  * @author University of Reading
+ * 
+ * @deprecated
  */
 public class SilhouetteNodeModel_o extends NodeModel {
 
@@ -296,7 +298,7 @@ public class SilhouetteNodeModel_o extends NodeModel {
 						}
 
 						// Convert all lists to arrays, calculate distance and add value to dist			
-						dist1 += euclidianDistance(strings.stream().toArray(String[]::new),
+						dist1 += euclideanDistance(strings.stream().toArray(String[]::new),
 								doubles.stream().toArray(Double[]::new),
 								integers.stream().toArray(Integer[]::new),
 								strings2.stream().toArray(String[]::new),
@@ -305,7 +307,7 @@ public class SilhouetteNodeModel_o extends NodeModel {
 					}
 				}
 
-				// Dividing by cluster length as last step for euclidian distance 
+				// Dividing by cluster length as last step for eucledian distance 
 				dist1 /=  m_silhouetteModel.getClusterData()[i].getDataIndices().length -1;
 
 				// Here we are looking for the minimum mean distance from 
@@ -344,7 +346,7 @@ public class SilhouetteNodeModel_o extends NodeModel {
 							}
 
 							// Convert all lists to arrays, calculate distance and add value to dist 
-							currDist += euclidianDistance(strings.stream().toArray(String[]::new),
+							currDist += euclideanDistance(strings.stream().toArray(String[]::new),
 									doubles.stream().toArray(Double[]::new),
 									integers.stream().toArray(Integer[]::new),
 									strings2.stream().toArray(String[]::new),
@@ -353,7 +355,7 @@ public class SilhouetteNodeModel_o extends NodeModel {
 
 						}
 
-						// Dividing by cluster length as last step of euclidian distance 
+						// Dividing by cluster length as last step of eucledian distance 
 						currDist /= (m_silhouetteModel.getClusterData()[i3].getDataIndices().length -1);
 
 						// Minimum check 
@@ -400,11 +402,11 @@ public class SilhouetteNodeModel_o extends NodeModel {
 	 * @param d2 Every Double value in the second data point
 	 * @param i2 Every Integer value in the second data point
 	 * 
-	 * @return the Euclidian Distance between the two points
+	 * @return the Eucledean Distance between the two points
 	 * 
 	 * @throws IllegalArgumentException when the dimensioun counts of the two points differ
 	 *  */
-	public double euclidianDistance(String[] s, Double[] d, Integer[] i,
+	public double euclideanDistance(String[] s, Double[] d, Integer[] i,
 			String[] s2, Double[] d2, Integer[] i2) throws IllegalArgumentException {
 
 		double dist = 0d;

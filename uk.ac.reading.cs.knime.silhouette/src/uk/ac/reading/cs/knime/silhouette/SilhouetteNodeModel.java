@@ -125,7 +125,7 @@ public class SilhouetteNodeModel extends NodeModel {
 
 	/** List of inclusion/exclusion of all the columns other than the cluster data column */
 	private boolean[] m_includeColumn;
-	
+
 	/** Index of chosen cluster column */
 	private int clusterColumnIndex = 0;
 
@@ -176,7 +176,6 @@ public class SilhouetteNodeModel extends NodeModel {
 		while(iterator1.hasNext()) {
 			prevRow = currRow;
 			prevStringCell = currStringCell;
-
 			currRow = iterator1.next();
 			currStringCell = (StringCell) currRow.getCell(clusterColumnIndex);			
 
@@ -184,14 +183,11 @@ public class SilhouetteNodeModel extends NodeModel {
 			if((prevRow != null &&
 					!prevStringCell.getStringValue().equals(currStringCell.getStringValue())) ||
 					!iterator1.hasNext()) {
-
 				if(!iterator1.hasNext()) lastClusterRowIndices.add(rowCount++);
-
 				tempClusterData.add(new InternalCluster(prevStringCell.getStringValue(),
 						COLOR_LIST[clusterNum%COLOR_LIST.length],
 						lastClusterRowIndices.toArray(new Integer[lastClusterRowIndices.size()-1])));
 				lastClusterRowIndices = new ArrayList<>();
-
 				clusterNum++;
 			}
 
@@ -255,8 +251,7 @@ public class SilhouetteNodeModel extends NodeModel {
 						} else if(currRow.getCell(i3).getType().getCellClass().getSimpleName().equals("StringCell")) {
 							strings.add(((StringCell) currRow.getCell(i3)).getStringValue());
 						} else {
-							//TODO throw an exception instead, not that it's likely to happen
-							System.out.print("WHAT IS THIS " + currRow.getCell(i3).getType() + " DOING HERE?");
+							//TODO throw an exception
 						}
 					}
 				}
@@ -305,7 +300,7 @@ public class SilhouetteNodeModel extends NodeModel {
 						}
 
 						// Convert all lists to arrays, calculate distance and add value to dist			
-						dist1 += euclidianDistance(strings.stream().toArray(String[]::new),
+						dist1 += euclideanDistance(strings.stream().toArray(String[]::new),
 								doubles.stream().toArray(Double[]::new),
 								integers.stream().toArray(Integer[]::new),
 								strings2.stream().toArray(String[]::new),
@@ -314,7 +309,7 @@ public class SilhouetteNodeModel extends NodeModel {
 					}
 				}
 
-				// Dividing by cluster length as last step for euclidian distance 
+				// Dividing by cluster length as last step for euclidean distance 
 				dist1 /=  (m_silhouetteModel.getClusterData()[i].getDataIndices().length -1);
 
 				// Here we are looking for the minimum mean distance from 
@@ -363,7 +358,7 @@ public class SilhouetteNodeModel extends NodeModel {
 							}
 
 							// Convert all lists to arrays, calculate distance and add value to dist 
-							currDist += euclidianDistance(strings.stream().toArray(String[]::new),
+							currDist += euclideanDistance(strings.stream().toArray(String[]::new),
 									doubles.stream().toArray(Double[]::new),
 									integers.stream().toArray(Integer[]::new),
 									strings2.stream().toArray(String[]::new),
@@ -372,7 +367,7 @@ public class SilhouetteNodeModel extends NodeModel {
 
 						}
 
-						// Dividing by cluster length as last step of euclidian distance 
+						// Dividing by cluster length as last step of euclidean distance 
 						currDist /= m_silhouetteModel.getClusterData()[i3].getDataIndices().length -1;
 
 						// Minimum check 
@@ -417,11 +412,11 @@ public class SilhouetteNodeModel extends NodeModel {
 	 * @param d2 Every Double value in the second data point
 	 * @param i2 Every Integer value in the second data point
 	 * 
-	 * @return the Euclidian Distance between the two points
+	 * @return the Euclidean Distance between the two points
 	 * 
 	 * @throws IllegalArgumentException when the dimensioun counts of the two points differ
 	 *  */
-	public double euclidianDistance(String[] s, Double[] d, Integer[] i,
+	public double euclideanDistance(String[] s, Double[] d, Integer[] i,
 			String[] s2, Double[] d2, Integer[] i2) throws IllegalArgumentException {
 
 		double dist = 0d;
@@ -438,19 +433,14 @@ public class SilhouetteNodeModel extends NodeModel {
 		//TODO shouldn't we weigh the distances somehow?
 
 		//calculate string distances
-		for(int l = 0; l < s.length; l++) {
-			dist += Math.pow(getStringDistance(s[l], s2[l]), 2);
-		}
+		for(int l = 0; l < s.length; l++) dist += Math.pow(getStringDistance(s[l], s2[l]), 2);
 
 		//calculate double distances
-		for(int l = 0; l < d.length; l++) {
-			dist += Math.pow(d[l] - d2[l], 2);
-		}
+		for(int l = 0; l < d.length; l++) dist += Math.pow(d[l] - d2[l], 2);
 
 		//calculate int distances
-		for(int l = 0; l < i.length; l++) {
-			dist += Math.pow(i[l] - i2[l], 2);
-		}
+		for(int l = 0; l < i.length; l++) dist += Math.pow(i[l] - i2[l], 2);
+		
 
 		return Math.sqrt(dist);
 	}                   
@@ -487,7 +477,6 @@ public class SilhouetteNodeModel extends NodeModel {
 			return new LongestCommonSubsequenceDistance().apply(s1, s2);
 			// ?? - Levenshtein Distance
 		} else return StringUtils.getLevenshteinDistance(s1, s2);
-
 	}
 
 	/**
@@ -511,7 +500,7 @@ public class SilhouetteNodeModel extends NodeModel {
 			boolean include = col.getType().isCompatible(DoubleValue.class)
 					|| col.getType().isCompatible(IntValue.class)
 					|| col.getType().isCompatible(StringValue.class);
-			
+
 			if (include && !m_usedColumns.isKeepAllSelected()) {
 				//  or if it is in the exclude list:
 				include = !excList.contains(col.getName());
@@ -519,7 +508,6 @@ public class SilhouetteNodeModel extends NodeModel {
 				m_includeColumn[i] = include;
 			}
 		}
-		
 	}
 
 	/**
@@ -600,7 +588,7 @@ public class SilhouetteNodeModel extends NodeModel {
 	 */
 	@Override
 	protected void saveSettingsTo(final NodeSettingsWO settings) {
-		
+
 		m_clusterColumn.saveSettingsTo(settings);
 		m_stringDistCalc.saveSettingsTo(settings);
 		m_usedColumns.saveSettingsTo(settings);
@@ -612,11 +600,11 @@ public class SilhouetteNodeModel extends NodeModel {
 	@Override
 	protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
 			throws InvalidSettingsException {
-		
+
 		m_clusterColumn.loadSettingsFrom(settings);
 		m_stringDistCalc.loadSettingsFrom(settings);
 		m_usedColumns.loadSettingsFrom(settings);
-		
+
 	}
 
 	/**
@@ -625,11 +613,11 @@ public class SilhouetteNodeModel extends NodeModel {
 	@Override
 	protected void validateSettings(final NodeSettingsRO settings)
 			throws InvalidSettingsException {
-		
+
 		m_clusterColumn.validateSettings(settings);
 		m_stringDistCalc.validateSettings(settings);
 		m_usedColumns.validateSettings(settings);
-		
+
 	}
 
 	/**

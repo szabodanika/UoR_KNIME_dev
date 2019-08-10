@@ -56,48 +56,48 @@ public class SilhouetteViewChartPanel extends JPanel {
 		this.overlap = overlap;
 	}
 
-	public void draw() {
-		// setting size of panel
-		setPreferredSize(new Dimension(WIDTH, HEIGHT));
-		this.setSize(WIDTH, HEIGHT);
+public void draw() {
+	// setting size of panel
+	setPreferredSize(new Dimension(WIDTH, HEIGHT));
+	this.setSize(WIDTH, HEIGHT);
 
-		final XYDataset dataset;
+	final XYDataset dataset;
 
-		// we generate the dataset from the Silhouette Model, but we
-		// need to call different functions for stacked and laid out charts
-		if(overlap) {
-			dataset = createOverlappingDataset(silhouetteModel);
-		} else {
-			dataset = createDataset(silhouetteModel);
-		}
-
-		// let's init the JFreeChart and its container, the ChartPanel
-		JFreeChart xylineChart = ChartFactory.createXYLineChart(
-				TITLE,
-				"Data Points",
-				"Coefficient",
-				dataset,
-				PlotOrientation.VERTICAL,
-				true, true, false);
-		ChartPanel chartPanel = new ChartPanel( xylineChart );
-		chartPanel.setPreferredSize( new java.awt.Dimension( WIDTH , HEIGHT ) );
-		final XYPlot plot = xylineChart.getXYPlot();
-
-		// setting the stroke width and color on the renderer based on the cluster colors
-		XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer( );
-		for(int i = 0; i < silhouetteModel.getClusterData().length; i++) {
-			renderer.setSeriesPaint(i, silhouetteModel.getClusterData()[i].getColor());
-			renderer.setSeriesStroke(i, new BasicStroke( 2.0f ));
-		}
-		plot.setRenderer( renderer ); 
-
-		// some other settings on the chartPanel
-		chartPanel.setMouseZoomable(true , false);         
-		chartPanel.setPreferredSize(new java.awt.Dimension(WIDTH,HEIGHT));
-
-		// add the chartPanel to this SilhouetteViewChartPanel
-		this.add(chartPanel); 
+	// we generate the dataset from the Silhouette Model, but we
+	// need to call different functions for stacked and laid out charts
+	if(overlap) {
+		dataset = createOverlappingDataset(silhouetteModel);
+	} else {
+		dataset = createDataset(silhouetteModel);
 	}
+
+	// let's init the JFreeChart and its container, the ChartPanel
+	JFreeChart xylineChart = ChartFactory.createXYLineChart(
+			TITLE,
+			"Data Points",
+			"Coefficient",
+			dataset,
+			PlotOrientation.VERTICAL,
+			true, true, false);
+	ChartPanel chartPanel = new ChartPanel( xylineChart );
+	chartPanel.setPreferredSize( new java.awt.Dimension( WIDTH , HEIGHT ) );
+	final XYPlot plot = xylineChart.getXYPlot();
+
+	// setting the stroke width and color on the renderer based on the cluster colors
+	XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer( );
+	for(int i = 0; i < silhouetteModel.getClusterData().length; i++) {
+		renderer.setSeriesPaint(i, silhouetteModel.getClusterData()[i].getColor());
+		renderer.setSeriesStroke(i, new BasicStroke( 2.0f ));
+	}
+	plot.setRenderer( renderer ); 
+
+	// some other settings on the chartPanel
+	chartPanel.setMouseZoomable(true , false);         
+	chartPanel.setPreferredSize(new java.awt.Dimension(WIDTH,HEIGHT));
+
+	// add the chartPanel to this SilhouetteViewChartPanel
+	this.add(chartPanel); 
+}
 
 
 	/**
@@ -148,10 +148,8 @@ public class SilhouetteViewChartPanel extends JPanel {
 	 * and their indices in their clusters as X
 	 */
 	private XYDataset createOverlappingDataset(SilhouetteModel data) {
-
 		// creating the dataset
 		XYSeriesCollection dataset = new XYSeriesCollection( );        
-
 		try {
 
 			// iterating through each cluster and each row

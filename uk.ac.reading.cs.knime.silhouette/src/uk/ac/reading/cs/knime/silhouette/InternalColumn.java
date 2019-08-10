@@ -11,6 +11,8 @@ import java.util.ArrayList;
  * @author University of Reading
  *
  * @param <T> Integer, Double or String
+ * 
+ * @deprecated
  */
 public class InternalColumn<T> {
 	

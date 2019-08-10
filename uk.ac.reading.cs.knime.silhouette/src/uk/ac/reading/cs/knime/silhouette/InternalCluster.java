@@ -15,6 +15,8 @@ import com.sun.istack.internal.NotNull;
  * have to know about the clusters in order to analyse them
  * 
  * @author University of Reading
+ * 
+ * 
  */
 public class InternalCluster {
 	
