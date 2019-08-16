@@ -32,9 +32,9 @@ public class SilhouetteNodeDialog extends DefaultNodeSettingsPane {
 
 		// Column containing cluster data
 		DialogComponentColumnNameSelection clusterColumn = new DialogComponentColumnNameSelection(
-		         new SettingsModelString(SilhouetteNodeModel.CFGKEY_CLUSTER_COLUMN, ""),
-		         "Cluster data column", 0, true, StringValue.class);
-		
+				new SettingsModelString(SilhouetteNodeModel.CFGKEY_CLUSTER_COLUMN, ""),
+				"Cluster data column", 0, true, IntValue.class, StringValue.class);
+
 		// String distance calculation method
 		DialogComponentStringSelection stringDistMethod = new DialogComponentStringSelection(new SettingsModelString(
 				SilhouetteNodeModel.CFGKEY_STRING_DISTANCE_METHOD,
@@ -42,13 +42,21 @@ public class SilhouetteNodeDialog extends DefaultNodeSettingsPane {
 				"String distance calculation method",
 				Arrays.asList(SilhouetteNodeModel.STRING_CALC_METHODS));
 
+		// Distance normalization method
+		DialogComponentStringSelection normalizationMethod = new DialogComponentStringSelection(new SettingsModelString(
+				SilhouetteNodeModel.CFGKEY_NORMALIZATION_METHOD,
+				SilhouetteNodeModel.DEFAULT_NORMALIZATION_METHOD),
+				"Distance normalization method",
+				Arrays.asList(SilhouetteNodeModel.NORMALIZATION_METHODS));
+
 		// Included columns
 		DialogComponentColumnFilter columnFilter = new DialogComponentColumnFilter(
-                new SettingsModelFilterString(SilhouetteNodeModel.CFGKEY_COLUMNS),
-                0, true, DoubleValue.class, StringValue.class, IntValue.class);
-		
+				new SettingsModelFilterString(SilhouetteNodeModel.CFGKEY_COLUMNS),
+				0, true, DoubleValue.class, StringValue.class, IntValue.class);
+
 		addDialogComponent(clusterColumn);
 		addDialogComponent(stringDistMethod);
+		addDialogComponent(normalizationMethod);
 		addDialogComponent(columnFilter);
 
 	}

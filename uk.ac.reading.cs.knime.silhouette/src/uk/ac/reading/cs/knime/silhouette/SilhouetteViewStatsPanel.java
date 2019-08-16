@@ -11,7 +11,9 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.TableModel; 
+import javax.swing.table.TableModel;
+
+import com.sun.istack.internal.NotNull; 
 
 /**
  * 
@@ -34,8 +36,8 @@ public class SilhouetteViewStatsPanel extends JPanel {
 	private static SilhouetteModel silhouetteModel;
 
 	/** Initial panel dimensions */
-	private static int WIDTH = 600;
-	private static int HEIGHT = 600;
+	private static int WIDTH = 700;
+	private static int HEIGHT = 500;
 
 	/** The whole table will round to this many decimals */
 	private static int DECIMALS = 2; 
@@ -55,12 +57,16 @@ public class SilhouetteViewStatsPanel extends JPanel {
 	 * 
 	 * @param silhouetteModel Silhouette Model containing all cluster data
 	 */
-	public SilhouetteViewStatsPanel(SilhouetteModel silhouetteModel) {
+	public SilhouetteViewStatsPanel(@NotNull SilhouetteModel silhouetteModel) {
 		SilhouetteViewStatsPanel.silhouetteModel = silhouetteModel;
 	}
 
 	public void draw() {
 
+		// Let's make sure we don't run into a NullPointerException 
+		if(silhouetteModel == null) return;
+		if(silhouetteModel.getClusterData() == null) return;
+		
 		setPreferredSize(new Dimension(WIDTH, HEIGHT));
 		this.setSize(WIDTH, HEIGHT);
 
@@ -217,11 +223,14 @@ public class SilhouetteViewStatsPanel extends JPanel {
 		for(int i = 0; i < columns.length; i++) {
 			table.getColumnModel().getColumn(i).setCellRenderer(renderer);
 		}
+		
+		table.setMinimumSize(new Dimension(WIDTH, 0));
 
 
 		// Finally boxing the table in a JScrollPane and adding it to this panel 
 		JScrollPane pane = new JScrollPane(table);
-		pane.setSize(new Dimension(WIDTH, HEIGHT));
+		if(table.getHeight() > 500) pane.setSize(new Dimension(WIDTH, 500));
+		else pane.setSize(new Dimension(WIDTH, table.getHeight()));
 		this.add(pane);
 
 	}

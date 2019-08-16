@@ -57,7 +57,6 @@ public class SilhouetteCellFactory extends SingleCellFactory{
 			value = m_silhouetteModel.getClusterData()[clusterIndex].getCoefficients()[rowIndex];
 			rowIndex ++;
 			if(rowIndex >= m_silhouetteModel.getClusterData()[clusterIndex].getCoefficients().length){
-				
 				if(clusterIndex >= m_silhouetteModel.getClusterData().length) {
 					//all the cells have been returned
 					System.out.println("Cluster " + clusterIndex + " Row " + rowIndex + " is out of bounds. Try resetting the node.");
@@ -67,10 +66,15 @@ public class SilhouetteCellFactory extends SingleCellFactory{
 				rowIndex = 0;
 			}
 		} catch (ArrayIndexOutOfBoundsException e) {
+			e.printStackTrace();
 			System.out.println("Cluster " + clusterIndex + " Row " + rowIndex + " is out of bounds. Try resetting the node.");
 			return DataType.getMissingCell();
 		}
 		
+		if(value == null) {
+			System.out.println("Cluster " + clusterIndex + " Row " + rowIndex + " is out of bounds. Try resetting the node.");
+			return DataType.getMissingCell();
+		}
 		return new DoubleCell(value);
 	}
 

@@ -23,6 +23,9 @@ public class InternalCluster {
 	/** name of the cluster (read from chosen column for cluster label data) */
 	private String name;
 	
+	/** integer number of the cluster (read from chosen column for cluster label data) */
+	private Integer intName;
+	
 	/** color of the cluster in views (charts, stats). Chosen sequentially from SilhouetteNodeModel.COLOR_LIST
 	 * @see SilhouetteNodeModel  */
 	private Color color;
@@ -34,7 +37,8 @@ public class InternalCluster {
 	private Integer[] dataIndices;
 	
 	
-	/** Default constructor for a new cluster before knowing the coefficients
+	/** Default constructor for a new cluster before knowing the coefficients. This method uses a string for name. If the clusters are numbered,
+	 * the integer version should be uses.
 	 * 
 	 * @param name Name of the cluster
 	 * @param color Color of the cluster in views (charts, stats)
@@ -47,53 +51,58 @@ public class InternalCluster {
 		this.coefficients = new Double[dataIndices.length];
 	}
 	
-	/** Constructor to create internal cluster with already computed coefficients
+	/** Constructor to create internal cluster with already computed coefficients.This method uses a string for name. If the clusters are numbered,
+	 * the integer version should be uses.
 	 * 
 	 * @param name Name of the cluster
 	 * @param color Color of the cluster in views (charts, stats)
 	 * @param dataIndices List of all the rows from the sorted input table that were put into this cluster
 	 * @param coefficients The Silhouette coefficients (-1.0 to 1.0)
 	 */
-	public InternalCluster(@NotNull String name,@NotNull  Color color,@NotNull  Integer[] dataIndices,@NotNull  Double[] coefficients) {
+	public InternalCluster(@NotNull String name, @NotNull  Color color,@NotNull  Integer[] dataIndices,@NotNull  Double[] coefficients) {
 		this.name = name;
 		this.color = color;
 		this.dataIndices = dataIndices;
 		this.coefficients = coefficients;
 	}
 	
-//	/** random generator constructor */
-//	public InternalCluster(int uniqueIndex) {
-//		generateRandomData(uniqueIndex);
-//	}
-//	
-	// This will give the cluster some randomized content
-//	public void generateRandomData(int uniqueIndex) {
-//		Random rnd = new Random();
-//		
-//		this.name = "Cluster" + uniqueIndex;
-//		this.color = Color.getHSBColor((float)rnd.nextInt(360), (float)rnd.nextDouble(), (float)rnd.nextDouble());
-//		
-//		int n = rnd.nextInt(20) + 80;
-//		
-//		coefficients = new Double[n];
-//		
-//		for(int i = 0; i < n; i++) {
-//			coefficients[i] = rnd.nextDouble()-0.1;
-//		}
-//		
-//		sort();
-//	}
+	/** Default constructor for a new cluster before knowing the coefficients. This method will use an integer for name.
+	 * 
+	 * @param intName Number of the cluster
+	 * @param color Color of the cluster in views (charts, stats)
+	 * @param dataIndices List of all the rows from the sorted input table that were put into this cluster
+	 */
+	public InternalCluster(@NotNull Integer intName,@NotNull Color color,@NotNull Integer[] dataIndices) {
+		this.intName = intName;
+		this.color = color;
+		this.dataIndices = dataIndices;
+		this.coefficients = new Double[dataIndices.length];
+	}
 	
+	/** Constructor to create internal cluster with already computed coefficients. This method will use an integer for name.
+	 * 
+	 * @param intName Number of the cluster
+	 * @param color Color of the cluster in views (charts, stats)
+	 * @param dataIndices List of all the rows from the sorted input table that were put into this cluster
+	 * * @param coefficients The Silhouette coefficients (-1.0 to 1.0)
+	 */
+	public InternalCluster(@NotNull Integer intName,@NotNull Color color,@NotNull Integer[] dataIndices, @NotNull  Double[] coefficients) {
+		this.intName = intName;
+		this.color = color;
+		this.dataIndices = dataIndices;
+		this.coefficients = coefficients;
+	}
+
 	/**
 	 * This will sort the values in descending order. Required for the chart views
 	 */
 	public void sort() {
-		Arrays.sort(coefficients);
-		Double[] reverse = new Double[coefficients.length];
-		for(int i = 0; i < coefficients.length; i++) {
-			reverse[coefficients.length - 1 - i] = coefficients[i];
+		Arrays.sort(this.coefficients);
+		Double[] reverse = new Double[this.coefficients.length];
+		for(int i = 0; i < this.coefficients.length; i++) {
+			reverse[this.coefficients.length - 1 - i] = this.coefficients[i];
 		}
-		coefficients = reverse;
+		this.coefficients = reverse;
 	}
 	
 	/**
@@ -102,11 +111,18 @@ public class InternalCluster {
 	 * @param val Silhouette Coefficient
 	 */
 	public void setCoefficient(int i, double val) {
-		this.coefficients[i] = val;
+		for(int rowIndex = 0; rowIndex < this.dataIndices.length ; rowIndex++) {
+			if( this.dataIndices[rowIndex] == i ) {
+				this.coefficients[rowIndex] = val;
+				return;
+			}
+		}
+		System.out.println(i + " not part of " + name);
 	}
 
 	public String getName() {
-		return this.name;
+		if(this.name == null) return String.valueOf(this.intName);
+		else return this.name;
 	}
 
 	public void setName(String name) {

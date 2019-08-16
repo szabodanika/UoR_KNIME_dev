@@ -17,6 +17,7 @@
             <option name="Cluster Column">Select the column that contains the cluster data</option>
             <option name="Method of String distance calculation">The node will use this algorithm to 
             determine distance between Strings</option>
+            <option name="Normalization">Method used to normalize distances</option>
             <option name="Included Columns">Select the columns you want to include in the evaluation.
              The selected cluster data column is always excluded</option>
         </tab>
@@ -24,6 +25,7 @@
     
     <ports>
         <inPort index="0" name="Clustered Data">Data labelled with cluster names in any column</inPort>
+        <inPort index="1" name="Distance Matrix">Distance Matrix of clustered data. Computed internally when not available.</inPort>
         <outPort index="0" name="Labeled Data">Original data with the Silhouette Coefficients of each data point</outPort>
     </ports>    
     

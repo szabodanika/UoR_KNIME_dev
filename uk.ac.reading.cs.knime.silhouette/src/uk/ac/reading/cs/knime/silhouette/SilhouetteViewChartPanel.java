@@ -57,6 +57,11 @@ public class SilhouetteViewChartPanel extends JPanel {
 	}
 
 public void draw() {
+	
+	// Let's make sure we don't run into a NullPointerException 
+	if(silhouetteModel == null) return;
+	if(silhouetteModel.getClusterData() == null) return;
+	
 	// setting size of panel
 	setPreferredSize(new Dimension(WIDTH, HEIGHT));
 	this.setSize(WIDTH, HEIGHT);
@@ -80,7 +85,7 @@ public void draw() {
 			PlotOrientation.VERTICAL,
 			true, true, false);
 	ChartPanel chartPanel = new ChartPanel( xylineChart );
-	chartPanel.setPreferredSize( new java.awt.Dimension( WIDTH , HEIGHT ) );
+	chartPanel.setPreferredSize(new java.awt.Dimension(WIDTH , HEIGHT));
 	final XYPlot plot = xylineChart.getXYPlot();
 
 	// setting the stroke width and color on the renderer based on the cluster colors
@@ -93,7 +98,6 @@ public void draw() {
 
 	// some other settings on the chartPanel
 	chartPanel.setMouseZoomable(true , false);         
-	chartPanel.setPreferredSize(new java.awt.Dimension(WIDTH,HEIGHT));
 
 	// add the chartPanel to this SilhouetteViewChartPanel
 	this.add(chartPanel); 
