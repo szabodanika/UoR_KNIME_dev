@@ -28,8 +28,12 @@ import org.knime.core.data.append.AppendedColumnRow;
 import org.knime.core.data.container.CloseableRowIterator;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.def.DoubleCell.DoubleCellFactory;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.data.def.StringCell.StringCellFactory;
+import org.knime.core.data.property.ColorHandler;
+import org.knime.core.data.property.ColorHandler.ColorModel;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -40,6 +44,7 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortType;
@@ -138,12 +143,15 @@ public class SilhouetteNodeModel extends NodeModel {
 
 	/** Whether we have a distance matrix input or not */
 	private boolean distanceMatrixInput = false;
+	
+	/** Array for containing descriptive statistical data about the coefficients */
+	private Object[][] statsValues;
 
 	/**
 	 * Constructor for the node model.
 	 */
 	protected SilhouetteNodeModel() {
-		super(createPortTypes(2, 2), createPortTypes(1));
+		super(createPortTypes(2, 2), createPortTypes(2));
 	}
 
 	/**
@@ -270,13 +278,13 @@ public class SilhouetteNodeModel extends NodeModel {
 
 		// Iterating through every cell in the column containing cluster names 
 		while(dataIterator1.hasNext()) {
-		
+
 			exec.getProgressMonitor().setMessage("Calculating Cluster Distances");
 			exec.setProgress(((double)rowCount)/((double)data.size())/2);
-			
+
 			currRow = dataIterator1.next();
 			currClusterLabelCell = currRow.getCell(clusterColumnIndex);			
-			
+
 
 			if(currClusterLabelCell.getType().getCellClass().getSimpleName().equals("StringCell")){
 
@@ -323,11 +331,11 @@ public class SilhouetteNodeModel extends NodeModel {
 		//converting the temporal data into internal clusters and adding them to silhouette model
 		if(currClusterLabelCell.getType().getCellClass().getSimpleName().equals("StringCell")){
 			for(int i = 0; i < clusterNames.size(); i++) {
-				clusterData.add(new InternalCluster((String) clusterNames.get(i), clusterColors.get(i), clusterRowIndices.get(i).toArray(new Integer[0])));
+				clusterData.add(new InternalCluster((String) clusterNames.get(i), clusterColors.get(i), clusterRowIndices.get(i).stream().mapToInt(Integer::intValue).toArray()));
 			}
 		} else if(currClusterLabelCell.getType().getCellClass().getSimpleName().equals("IntCell")) {
 			for(int i = 0; i < clusterNames.size(); i++) {
-				clusterData.add(new InternalCluster((Integer) clusterNames.get(i), clusterColors.get(i), clusterRowIndices.get(i).toArray(new Integer[0])));
+				clusterData.add(new InternalCluster((Integer) clusterNames.get(i), clusterColors.get(i), clusterRowIndices.get(i).stream().mapToInt(Integer::intValue).toArray()));
 			}
 		}
 
@@ -435,8 +443,113 @@ public class SilhouetteNodeModel extends NodeModel {
 		distanceMatrixIterator2.close();
 		LabeledInput.close();
 
+		// Calculate statistics table based on silhouette values
+		// Names of columns in JTable 
+		String[] statsColumns = {"Cluster",
+				"Avg. S",
+				"Sqr. Avg. S",
+				"Std. Dev.",
+				"Num. S<0",
+				"% S<0"};
+
+		// Data array used in JTable 
+		statsValues = new Object[m_silhouetteModel.getClusterData().length + 1][statsColumns.length];
+
+		// Initialising arrays for iteration variables, average, min and max values 
+		// 0 - Average
+		// 1 - Squared Average
+		// 2 - Standard Deviation
+		// 3 - Number of negative coefficients
+		// 4 - % of negative coefficients 
+
+		double[] vals = new double[statsColumns.length-1],
+				avgVals = new double[statsColumns.length-1],
+				minVals = new double[statsColumns.length-1],
+				maxVals = new double[statsColumns.length-1];
+
+		// Initialising extremes 
+		for(int i = 0; i < minVals.length; i++) {
+			minVals[i] = Double.MAX_VALUE;
+			maxVals[i] = Double.MIN_VALUE;
+		}
+
+		// Iterating through every cluster
+		for(int i = 0; i < m_silhouetteModel.getClusterData().length; i++) {
+
+			// Zeroing all values
+			for(int i2 = 0; i2 < vals.length; i2++) {
+				vals[i2] = 0;
+			}
+
+			for(int i2 = 0; i2 < m_silhouetteModel.getClusterData()[i].getCoefficients().length; i2++) {
+				// Adding value to avg 
+				vals[0] += m_silhouetteModel.getClusterData()[i].getCoefficients()[i2];
+
+				// Adding squared value to squared avg 
+				vals[1] += Math.pow(m_silhouetteModel.getClusterData()[i].getCoefficients()[i2], 2);
+
+				// Adding value to negative counter 
+				if(m_silhouetteModel.getClusterData()[i].getCoefficients()[i2] < 0) vals[3] ++;
+			}
+
+			// Dividing avg with number of rows in cluster 
+			vals[0] = vals[0] / m_silhouetteModel.getClusterData()[i].getCoefficients().length;
+
+			// Dividing avg with number of rows in cluster and taking the square root of that 
+			vals[1] = Math.sqrt(vals[1] / m_silhouetteModel.getClusterData()[i].getCoefficients().length);
+
+			// Calculating % of negative coefficients  
+			vals[4] = vals[3]*100 / m_silhouetteModel.getClusterData()[i].getCoefficients().length;
+
+			// Calculating standard deviation 
+			for(int i2 = 0; i2 < m_silhouetteModel.getClusterData()[i].getCoefficients().length; i2++) {
+				vals[2] += Math.pow(m_silhouetteModel.getClusterData()[i].getCoefficients()[i2] - vals[0], 2);
+			}
+			vals[2] = Math.sqrt(vals[2] / m_silhouetteModel.getClusterData()[i].getCoefficients().length);
+
+
+			// Putting values in data array and checking if there are minimums or maximums 
+			statsValues[i][0] = m_silhouetteModel.getClusterData()[i].getName();;
+			for(int i2 = 0; i2 < vals.length; i2++) {
+				// Value goes in data array with +1 offset because index 0 is the cluster name 
+				statsValues[i][i2 + 1] = vals[i2];
+
+				// Adding value to avg sum 
+				avgVals[i2] += vals[i2];
+
+				// Checking if it is a min or a max 
+				if(vals[i2] < minVals[i2]) minVals[i2] = vals[i2];
+				if(vals[i2] > maxVals[i2]) maxVals[i2] = vals[i2];
+			}
+		}
+
+
+		// Dividing summed values to get average values 
+		for(int i2 = 0; i2 < avgVals.length; i2++) {
+			avgVals[i2] = avgVals[i2] / (double) m_silhouetteModel.getClusterData().length;
+		}
+
+		// Adding the average row to the bottom 
+		statsValues[statsValues.length-1][0] = "Average";
+		for(int i2 = 0; i2 < avgVals.length; i2++) {
+			statsValues[statsValues.length-1][i2+1] = avgVals[i2];
+		}
+		
+		BufferedDataContainer stats = exec.createDataContainer(getStatTableSpec(statsColumns));
+		DefaultRow newRow;
+		DataCell[] statCells = new DataCell[statsValues[0].length-1];
+		int colCount = 0;
+		for(Object[] o : statsValues) {
+			for(int i = 1; i < o.length; i++) {
+				statCells[i-1] = (DoubleCell) DoubleCellFactory.create((Double)o[i]);
+			}
+			newRow = new DefaultRow(new RowKey((String) o[0]), statCells);
+			stats.addRowToTable(newRow);
+			colCount++;
+		}
+		stats.close();
 		// Return it 
-		return new BufferedDataTable[]{LabeledInput.getTable()};
+		return new BufferedDataTable[]{LabeledInput.getTable(), stats.getTable()};
 	}
 
 
@@ -646,6 +759,17 @@ public class SilhouetteNodeModel extends NodeModel {
 				"Silhouette" , DoubleCell.TYPE).createSpec();
 
 		return new DataTableSpec(columns);
+	}
+	
+	private DataTableSpec getStatTableSpec(String[] columnNames) {
+		DataColumnSpec[] columns = new DataColumnSpec[columnNames.length-1];
+		
+		for(int i = 1; i < columnNames.length; i ++){
+			columns[i-1] = new DataColumnSpecCreator(
+					columnNames[i] , DoubleCell.TYPE).createSpec();
+		}
+		
+		return new DataTableSpec(columns);
 	}
 	/** Generates DataTableSpec for for the internally used distance matrix table
 	 * 
@@ -720,8 +844,8 @@ public class SilhouetteNodeModel extends NodeModel {
 			// reusable variables for the next loop
 			String clusterName;
 			Color clusterColor;
-			Integer[] clusterDataIndices;
-			Double[] clusterCoefficients;
+			int[] clusterDataIndices;
+			double[] clusterCoefficients;
 
 			// for each cluster in the internal model
 			for(int i = 0; i < internalClusters.length; i++) {
@@ -729,8 +853,8 @@ public class SilhouetteNodeModel extends NodeModel {
 				// load name, color, row indices and coefficients
 				clusterName = settings.getString("name" + i);
 				clusterColor = new Color(settings.getInt("color" + i));
-				clusterDataIndices = ArrayUtils.toObject(settings.getIntArray("dataIndices" + i));
-				clusterCoefficients = ArrayUtils.toObject(settings.getDoubleArray("coefficients" + i));
+				clusterDataIndices = settings.getIntArray("dataIndices" + i);
+				clusterCoefficients = settings.getDoubleArray("coefficients" + i);
 
 				// and then add the new cluster to the cluster array
 				internalClusters[i] = new InternalCluster(clusterName, clusterColor, clusterDataIndices, clusterCoefficients);
@@ -761,8 +885,8 @@ public class SilhouetteNodeModel extends NodeModel {
 		for(InternalCluster ic : m_silhouetteModel.getClusterData()) {
 			internalSettings.addString("name" + k, ic.getName());
 			internalSettings.addInt("color" + k, ic.getColor().getRGB());
-			internalSettings.addDoubleArray("coefficients" + k, ArrayUtils.toPrimitive(ic.getCoefficients()));
-			internalSettings.addIntArray("dataIndices" + k, ArrayUtils.toPrimitive(ic.getDataIndices()));
+			internalSettings.addDoubleArray("coefficients" + k,ic.getCoefficients());
+			internalSettings.addIntArray("dataIndices" + k, ic.getDataIndices());
 			k++;
 		}
 

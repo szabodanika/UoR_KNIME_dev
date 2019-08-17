@@ -24,17 +24,17 @@ public class InternalCluster {
 	private String name;
 	
 	/** integer number of the cluster (read from chosen column for cluster label data) */
-	private Integer intName;
+	private int intName;
 	
 	/** color of the cluster in views (charts, stats). Chosen sequentially from SilhouetteNodeModel.COLOR_LIST
 	 * @see SilhouetteNodeModel  */
 	private Color color;
 	
 	/** This will contain the Silhouette coefficients (-1.0 to 1.0) after the execute method*/
-	private Double[] coefficients;
+	private double[] coefficients;
 	
 	/** this list of all the rows from the sorted input table that were put into this cluster */
-	private Integer[] dataIndices;
+	private int[] dataIndices;
 	
 	
 	/** Default constructor for a new cluster before knowing the coefficients. This method uses a string for name. If the clusters are numbered,
@@ -44,11 +44,11 @@ public class InternalCluster {
 	 * @param color Color of the cluster in views (charts, stats)
 	 * @param dataIndices List of all the rows from the sorted input table that were put into this cluster
 	 */
-	public InternalCluster(@NotNull String name, @NotNull Color color, @NotNull Integer[] dataIndices) {
+	public InternalCluster(@NotNull String name, @NotNull Color color, @NotNull int[] dataIndices) {
 		this.name = name;
 		this.color = color;
 		this.dataIndices = dataIndices;
-		this.coefficients = new Double[dataIndices.length];
+		this.coefficients = new double[dataIndices.length];
 	}
 	
 	/** Constructor to create internal cluster with already computed coefficients.This method uses a string for name. If the clusters are numbered,
@@ -59,7 +59,7 @@ public class InternalCluster {
 	 * @param dataIndices List of all the rows from the sorted input table that were put into this cluster
 	 * @param coefficients The Silhouette coefficients (-1.0 to 1.0)
 	 */
-	public InternalCluster(@NotNull String name, @NotNull  Color color,@NotNull  Integer[] dataIndices,@NotNull  Double[] coefficients) {
+	public InternalCluster(@NotNull String name, @NotNull  Color color,@NotNull  int[] dataIndices,@NotNull  double[] coefficients) {
 		this.name = name;
 		this.color = color;
 		this.dataIndices = dataIndices;
@@ -72,11 +72,11 @@ public class InternalCluster {
 	 * @param color Color of the cluster in views (charts, stats)
 	 * @param dataIndices List of all the rows from the sorted input table that were put into this cluster
 	 */
-	public InternalCluster(@NotNull Integer intName,@NotNull Color color,@NotNull Integer[] dataIndices) {
+	public InternalCluster(@NotNull Integer intName,@NotNull Color color,@NotNull int[] dataIndices) {
 		this.intName = intName;
 		this.color = color;
 		this.dataIndices = dataIndices;
-		this.coefficients = new Double[dataIndices.length];
+		this.coefficients = new double[dataIndices.length];
 	}
 	
 	/** Constructor to create internal cluster with already computed coefficients. This method will use an integer for name.
@@ -86,7 +86,7 @@ public class InternalCluster {
 	 * @param dataIndices List of all the rows from the sorted input table that were put into this cluster
 	 * * @param coefficients The Silhouette coefficients (-1.0 to 1.0)
 	 */
-	public InternalCluster(@NotNull Integer intName,@NotNull Color color,@NotNull Integer[] dataIndices, @NotNull  Double[] coefficients) {
+	public InternalCluster(@NotNull Integer intName,@NotNull Color color,@NotNull int[] dataIndices, @NotNull  double[] coefficients) {
 		this.intName = intName;
 		this.color = color;
 		this.dataIndices = dataIndices;
@@ -98,7 +98,7 @@ public class InternalCluster {
 	 */
 	public void sort() {
 		Arrays.sort(this.coefficients);
-		Double[] reverse = new Double[this.coefficients.length];
+		double[] reverse = new double[this.coefficients.length];
 		for(int i = 0; i < this.coefficients.length; i++) {
 			reverse[this.coefficients.length - 1 - i] = this.coefficients[i];
 		}
@@ -137,19 +137,19 @@ public class InternalCluster {
 		this.color = color;
 	}
 
-	public Double[] getCoefficients() {
+	public double[] getCoefficients() {
 		return coefficients;
 	}
 
-	public void setCoefficients(Double[] coefficients) {
+	public void setCoefficients(double[] coefficients) {
 		this.coefficients = coefficients;
 	}
 
-	public Integer[] getDataIndices() {
+	public int[] getDataIndices() {
 		return this.dataIndices;
 	}
 
-	public void setDataIndices(Integer[] dataIndices) {
+	public void setDataIndices(int[] dataIndices) {
 		this.dataIndices = dataIndices;
 	}
 

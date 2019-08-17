@@ -27,6 +27,7 @@
         <inPort index="0" name="Clustered Data">Data labelled with cluster names in any column</inPort>
         <inPort index="1" name="Distance Matrix">Distance Matrix of clustered data. Computed internally when not available.</inPort>
         <outPort index="0" name="Labeled Data">Original data with the Silhouette Coefficients of each data point</outPort>
+        <outPort index="1" name="Descriptive Statistics">Descriptive statistics of silhuette coefficients for each cluster</outPort>
     </ports>    
     
     <views>
