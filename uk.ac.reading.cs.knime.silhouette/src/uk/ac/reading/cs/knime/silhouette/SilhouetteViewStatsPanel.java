@@ -76,7 +76,7 @@ public class SilhouetteViewStatsPanel extends JPanel {
 				"Sqr. Avg. S",
 				"Std. Dev.",
 				"Num. S<0",
-		"% S<0"};
+				"% S<0"};
 
 		// Data array used in JTable 
 		Object[][] data = new Object[silhouetteModel.getClusterData().length + 1][columns.length];
@@ -85,8 +85,7 @@ public class SilhouetteViewStatsPanel extends JPanel {
 		// 0 - Average
 		// 1 - Squared Average
 		// 2 - Standard Deviation
-		// 3 - Number of negative coefficients
-		// 4 - % of negative coefficients 
+		// 3 - % of negative coefficients 
 
 		double[] vals = new double[columns.length-1],
 				avgVals = new double[columns.length-1],
@@ -141,18 +140,12 @@ public class SilhouetteViewStatsPanel extends JPanel {
 				data[i][i2 + 1] = vals[i2];
 
 				// Adding value to avg sum 
-				avgVals[i2] += vals[i2];
+				avgVals[i2] += vals[i2]*((double)silhouetteModel.getClusterData()[i].getCoefficients().length/(double)silhouetteModel.getRowCount());
 
 				// Checking if it is a min or a max 
 				if(vals[i2] < minVals[i2]) minVals[i2] = vals[i2];
 				if(vals[i2] > maxVals[i2]) maxVals[i2] = vals[i2];
 			}
-		}
-
-
-		// Dividing summed values to get average values 
-		for(int i2 = 0; i2 < avgVals.length; i2++) {
-			avgVals[i2] = avgVals[i2] / (double) silhouetteModel.getClusterData().length;
 		}
 
 		// Adding the average row to the bottom 

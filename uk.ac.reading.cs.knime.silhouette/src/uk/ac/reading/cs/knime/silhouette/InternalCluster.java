@@ -1,6 +1,7 @@
 package uk.ac.reading.cs.knime.silhouette;
 
 import java.awt.Color;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
 
@@ -28,7 +29,7 @@ public class InternalCluster {
 	
 	/** color of the cluster in views (charts, stats). Chosen sequentially from SilhouetteNodeModel.COLOR_LIST
 	 * @see SilhouetteNodeModel  */
-	private Color color;
+	private Color[] colors;
 	
 	/** This will contain the Silhouette coefficients (-1.0 to 1.0) after the execute method*/
 	private double[] coefficients;
@@ -36,6 +37,36 @@ public class InternalCluster {
 	/** this list of all the rows from the sorted input table that were put into this cluster */
 	private int[] dataIndices;
 	
+	/**
+	 * 
+	 * @return the most common color in this cluster
+	 */
+	public Color getColor() {
+		ArrayList<Color> colors = new ArrayList<>();
+		ArrayList<Integer> counts = new ArrayList<>();
+		
+		boolean jump = false;
+		for(int i = 0 ; i < this.colors.length; i++) {
+			jump = false;
+			for(int l = 0; l < colors.size(); l++) {
+				if(colors.get(l).getRGB() == this.colors[i].getRGB()){
+					counts.set(l, counts.get(l) + 1);
+					jump = true;
+				}
+			}
+			if(!jump) {
+				colors.add(this.colors[i]);
+				counts.add(1);
+			}
+		}
+		
+		int best = 0;
+		for(int i = 0; i < counts.size(); i++) {
+			if(counts.get(i) > counts.get(best)) best = i; 
+		}
+		
+		return colors.get(best);
+	}
 	
 	/** Default constructor for a new cluster before knowing the coefficients. This method uses a string for name. If the clusters are numbered,
 	 * the integer version should be uses.
@@ -44,9 +75,9 @@ public class InternalCluster {
 	 * @param color Color of the cluster in views (charts, stats)
 	 * @param dataIndices List of all the rows from the sorted input table that were put into this cluster
 	 */
-	public InternalCluster(@NotNull String name, @NotNull Color color, @NotNull int[] dataIndices) {
+	public InternalCluster(@NotNull String name, @NotNull Color[] colors, @NotNull int[] dataIndices) {
 		this.name = name;
-		this.color = color;
+		this.colors = colors;
 		this.dataIndices = dataIndices;
 		this.coefficients = new double[dataIndices.length];
 	}
@@ -59,9 +90,9 @@ public class InternalCluster {
 	 * @param dataIndices List of all the rows from the sorted input table that were put into this cluster
 	 * @param coefficients The Silhouette coefficients (-1.0 to 1.0)
 	 */
-	public InternalCluster(@NotNull String name, @NotNull  Color color,@NotNull  int[] dataIndices,@NotNull  double[] coefficients) {
+	public InternalCluster(@NotNull String name, @NotNull Color[] colors,@NotNull  int[] dataIndices,@NotNull  double[] coefficients) {
 		this.name = name;
-		this.color = color;
+		this.colors = colors;
 		this.dataIndices = dataIndices;
 		this.coefficients = coefficients;
 	}
@@ -72,9 +103,9 @@ public class InternalCluster {
 	 * @param color Color of the cluster in views (charts, stats)
 	 * @param dataIndices List of all the rows from the sorted input table that were put into this cluster
 	 */
-	public InternalCluster(@NotNull Integer intName,@NotNull Color color,@NotNull int[] dataIndices) {
+	public InternalCluster(@NotNull Integer intName,@NotNull Color[] colors,@NotNull int[] dataIndices) {
 		this.intName = intName;
-		this.color = color;
+		this.colors = colors;
 		this.dataIndices = dataIndices;
 		this.coefficients = new double[dataIndices.length];
 	}
@@ -86,9 +117,9 @@ public class InternalCluster {
 	 * @param dataIndices List of all the rows from the sorted input table that were put into this cluster
 	 * * @param coefficients The Silhouette coefficients (-1.0 to 1.0)
 	 */
-	public InternalCluster(@NotNull Integer intName,@NotNull Color color,@NotNull int[] dataIndices, @NotNull  double[] coefficients) {
+	public InternalCluster(@NotNull Integer intName,@NotNull Color[] colors,@NotNull int[] dataIndices, @NotNull  double[] coefficients) {
 		this.intName = intName;
-		this.color = color;
+		this.colors = colors;
 		this.dataIndices = dataIndices;
 		this.coefficients = coefficients;
 	}
@@ -97,12 +128,38 @@ public class InternalCluster {
 	 * This will sort the values in descending order. Required for the chart views
 	 */
 	public void sort() {
-		Arrays.sort(this.coefficients);
-		double[] reverse = new double[this.coefficients.length];
-		for(int i = 0; i < this.coefficients.length; i++) {
-			reverse[this.coefficients.length - 1 - i] = this.coefficients[i];
+		Color switchColor;
+		int switchIndex;
+		double switchValue;
+		for(int i = 0; i < coefficients.length; i++) {
+			
+			for(int i2 = 0; i2 < coefficients.length; i2++) {
+				if(this.coefficients[i2] < this.coefficients[i]) {
+					
+					switchIndex = this.dataIndices[i];
+					this.dataIndices[i] = this.dataIndices[i2];
+					this.dataIndices[i2] = switchIndex;
+					
+					switchColor = this.colors[i];
+					this.colors[i] = this.colors[i2];
+					this.colors[i2] = switchColor;
+					
+					switchValue = this.coefficients[i];
+					this.coefficients[i] = this.coefficients[i2];
+					this.coefficients[i2] = switchValue;
+					
+					
+				}
+				
+			}
+			
 		}
-		this.coefficients = reverse;
+//		Arrays.sort(this.coefficients);
+//		double[] reverse = new double[this.coefficients.length];
+//		for(int i = 0; i < this.coefficients.length; i++) {
+//			reverse[this.coefficients.length - 1 - i] = this.coefficients[i];
+//		}
+//		this.coefficients = reverse;
 	}
 	
 	/**
@@ -129,12 +186,12 @@ public class InternalCluster {
 		this.name = name;
 	}
 
-	public Color getColor() {
-		return this.color;
+	public Color[] getColors() {
+		return this.colors;
 	}
 
-	public void setColor(Color color) {
-		this.color = color;
+	public void setColor(Color[] colors) {
+		this.colors = colors;
 	}
 
 	public double[] getCoefficients() {

@@ -14,18 +14,14 @@
           to their own clusters or to the others, which indicates if there may be too few or too many clusters.</intro>
         
         <tab name="Options">
-            <option name="Cluster Column">Select the column that contains the cluster data</option>
-            <option name="Method of String distance calculation">The node will use this algorithm to 
-            determine distance between Strings</option>
-            <option name="Normalization">Method used to normalize distances</option>
-            <option name="Included Columns">Select the columns you want to include in the evaluation.
-             The selected cluster data column is always excluded</option>
+            <option name="Cluster Column">The column that contains the cluster labels</option>
+            <option name="Included Columns">List of columns to include in the evaluation.</option>
         </tab>
     </fullDescription>
     
     <ports>
         <inPort index="0" name="Clustered Data">Data labelled with cluster names in any column</inPort>
-        <inPort index="1" name="Distance Matrix">Distance Matrix of clustered data. Computed internally when not available.</inPort>
+        <inPort index="1" name="Distance Matrix">Normalized distance Matrix of clustered data. Computed internally when not available.</inPort>
         <outPort index="0" name="Labeled Data">Original data with the Silhouette Coefficients of each data point</outPort>
         <outPort index="1" name="Descriptive Statistics">Descriptive statistics of silhuette coefficients for each cluster</outPort>
     </ports>    

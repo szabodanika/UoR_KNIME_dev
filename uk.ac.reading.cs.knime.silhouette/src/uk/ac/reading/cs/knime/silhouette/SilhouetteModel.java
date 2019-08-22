@@ -18,6 +18,7 @@ public class SilhouetteModel {
 		this.clusterData = clusterData;
 	}
 	
+	
 	public int getRowCount() {
 		int rowCount = 0;
 		for(InternalCluster ic : clusterData) {
