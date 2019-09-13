@@ -18,7 +18,10 @@ public class SilhouetteModel {
 		this.clusterData = clusterData;
 	}
 	
-	
+	/**
+	 * 
+	 * @return the number of objects in all clusters
+	 */
 	public int getRowCount() {
 		int rowCount = 0;
 		for(InternalCluster ic : clusterData) {
