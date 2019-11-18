@@ -94,9 +94,11 @@ public class SilhouetteViewChartPanel extends JPanel {
 				PlotOrientation.VERTICAL,
 				true, true, false);
 		ChartPanel chartPanel = new ChartPanel( xylineChart );
+		chartPanel.setDomainZoomable(false);
+		chartPanel.setRangeZoomable(false);
 		chartPanel.setPreferredSize(new java.awt.Dimension(WIDTH , HEIGHT));
 		final XYPlot plot = xylineChart.getXYPlot();
-
+		
 		// setting the stroke width and color on the renderer based on the cluster colors
 		XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer(){
 
@@ -110,7 +112,6 @@ public class SilhouetteViewChartPanel extends JPanel {
 	            }
 	            return cpaint;
 	        }
-			
 			
 
 			public Color getItemColor(int row, int col) {
@@ -131,10 +132,15 @@ public class SilhouetteViewChartPanel extends JPanel {
 			renderer.setSeriesShape(i, new Ellipse2D.Double(-2.5, -2.5, 5, 5));
 		}
 		plot.setRenderer( renderer ); 
+		chartPanel.setDomainZoomable(false);
+		chartPanel.setRangeZoomable(false);
 
 		// some other settings on the chartPanel
-		chartPanel.setMouseZoomable(true , false);         
+		chartPanel.setMouseZoomable(false , false);         
 
+		// cleaning the panel before adding the new one
+		this.removeAll();
+		
 		// add the chartPanel to this SilhouetteViewChartPanel
 		this.add(chartPanel); 
 	}

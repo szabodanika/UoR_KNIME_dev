@@ -219,6 +219,8 @@ public class SilhouetteViewStatsPanel extends JPanel {
 		
 		table.setMinimumSize(new Dimension(WIDTH, 0));
 
+		// cleaning the panel before adding the new one
+		this.removeAll();
 
 		// Finally boxing the table in a JScrollPane and adding it to this panel 
 		JScrollPane pane = new JScrollPane(table);
